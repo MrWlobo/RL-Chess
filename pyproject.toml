@@ -1,0 +1,11 @@
+[project]
+name = "rl-chess"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "gym-chess>=0.1.1",
+    "gymnasium>=1.2.3",
+    "torch>=2.10.0",
+]
