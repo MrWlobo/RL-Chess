@@ -8,6 +8,7 @@ dependencies = [
     "gym-chess>=0.1.1",
     "gymnasium>=1.2.3",
     "matplotlib>=3.10.8",
+    "pydantic-settings>=2.13.1",
     "python-chess>=0.31.4",
     "torch>=2.10.0",
 ]
@@ -28,3 +29,19 @@ dev = [
 [tool.ruff]
 line-length = 80
 target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E4",
+    "E7",
+    "E9",
+    "F",
+    "I",
+    "B",
+    "UP",
+    "C4",
+    "SIM",
+    "RET",
+    "BLE",
+    "TC",
+]
