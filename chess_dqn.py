@@ -9,6 +9,7 @@ from collections import deque
 import torch
 from torch import nn
 import torch.nn.functional as F
+import os
 
 
 PIECE_VALUES = {
@@ -32,7 +33,7 @@ def get_custom_reward(board: chess.Board, move: chess.Move) -> float:
             custom_reward = 10.0
         else:
             custom_reward = 0.0
-    custom_reward -= board.fullmove_number * 0.001
+    # custom_reward -= board.fullmove_number * 0.001
     return custom_reward
 
 
@@ -82,6 +83,9 @@ class ReplayMemory():
     def sample(self, sample_size):
         return random.sample(self.memory, sample_size)
 
+    def clear(self):
+        self.memory.clear()
+        
     def __len__(self):
         return len(self.memory)
 
@@ -147,8 +151,8 @@ def move_from_output(nn_output: int) -> chess.Move:
         return None
     return chess.Move.from_uci(from_square + to_square)
 
-def get_best_legal_move(outputs: torch.Tensor, board: chess.Board) -> chess.Move:
-    sorted_indices = outputs.flatten().argsort(descending=True)
+def get_best_legal_move(output: torch.Tensor, board: chess.Board) -> chess.Move:
+    sorted_indices = output.flatten().argsort(descending=True)
     legal_moves = set(board.legal_moves)
     for output in sorted_indices:
         move = move_from_output(output)
@@ -158,35 +162,55 @@ def get_best_legal_move(outputs: torch.Tensor, board: chess.Board) -> chess.Move
         if move in legal_moves:
             return move
 
-def reward_of_next_moves(original_board: chess.Board, n_moves: int, target_dqn: nn.Module) -> float:
-    # returns sum rewards of next n moves
-    board = original_board.copy()
-    reward_sum = 0.0
+def rewards_of_next_move(original_boards: list[chess.Board], neural_network: nn.Module) -> tuple[list[float], list[chess.Board]]:
+    # Returns sum rewards of next move.
+    # Also modifies original_boards IN PLACE.
+    batch_size = len(original_boards)
+    rewards_sum = batch_size * [0.0]
     
-    signs = [-1, 1]
-    for i in range(n_moves):
-        current_sign = signs[i % 2]
-        outputs = target_dqn(board_to_tensor(board=board))
-        move = get_best_legal_move(outputs=outputs, board=board)
-        reward_sum += get_custom_reward(board=board, move=move) * current_sign
+    active_indices = [i for i, b in enumerate(original_boards) if not b.is_game_over()]
+    
+    if not active_indices:
+        return rewards_sum
+
+    active_boards = [original_boards[i] for i in active_indices]
+    tensor_list = [board_to_tensor(board=board) for board in active_boards]
+    tensor_input = torch.vstack(tensor_list)
+    
+    with torch.no_grad():
+        outputs = neural_network(tensor_input)
+    
+    for idx_in_batch, original_idx in enumerate(active_indices):
+        output = outputs[idx_in_batch]
+        board = active_boards[idx_in_batch]
+        
+        move = get_best_legal_move(output=output, board=board)
+        reward = get_custom_reward(board=board, move=move)
         board.push(move)
-        if board.is_game_over():
-            break
-    return reward_sum
+        rewards_sum[original_idx] += reward
+        
+    return rewards_sum
 
 def move_to_index(move: chess.Move) -> int:
     # move.from_square and move.to_square are numbers 0-63
     return (move.from_square * 64) + move.to_square
 
+def get_next_moves(boards: list[chess.Board], neural_network: nn.Module) -> list[chess.Move]:
+    tensor_list = [board_to_tensor(board=board) for board in boards]
+    tensor_input = torch.vstack(tensor_list)
+    outputs = neural_network(tensor_input)
+    moves = [get_best_legal_move(output=output, board=board) for output, board in zip(outputs, boards)]
+    return moves
+
 class ChessDQN():
     # Hyperparameters (adjustable)
     learning_rate_a = 0.001         # learning rate (alpha)
-    discount_factor_g = 0.99        # discount rate (gamma)    
-    network_sync_rate = 10          # number of steps the agent takes before syncing the policy and target network
+    discount_factor_g = 0.9        # discount rate (gamma)    
+    # network_sync_rate = 10          # number of steps the agent takes before syncing the policy and target network
     replay_memory_size = 10000      # size of replay memory
-    mini_batch_size = 512           # size of the training data set sampled from the replay memory
-    moves_to_evaluate = 1           # number of moves to evaluate when calculating reward
-    time_verbose = True
+    # mini_batch_size = 128           # size of the training data set sampled from the replay memory
+    # moves_to_evaluate = 1           # number of moves to evaluate when calculating reward
+    # time_verbose = True
 
     # Neural Network
     loss_fn = nn.SmoothL1Loss()     # NN Loss function. MSE=Mean Squared Error can be swapped to something else.
@@ -194,184 +218,172 @@ class ChessDQN():
 
     # num_states = 17*64*64
     num_actions = 64*64
+    
+    def _simulate_games(self, memory: ReplayMemory, episodes: int):
+        boards = [chess.Board() for _ in range(episodes)]
+        while boards:
+            boards = [board for board in boards if not board.is_game_over()]
+            num_boards = len(boards)
+            if self.verbose:
+                print(f"\rGames left: {num_boards}  ", end="")
+            random_mask = [random.random() < self.epsilon for _ in range(num_boards)]
+            rand_indices = set([i for i,x in enumerate(random_mask) if x == 1])
+            
+            new_random_boards = []
+            new_dqn_boards = []
+            
+            random_boards = [boards[i] for i in rand_indices]
+            if random_boards:
+                random_moves = [random.choice(list(board.legal_moves)) for board in random_boards]
+                new_random_boards = [board.copy() for board in random_boards]
+                for i, board in enumerate(new_random_boards):
+                    board.push(random_moves[i])
+                    
+                for board, move, new_board in zip(random_boards, random_moves, new_random_boards):
+                    reward = get_custom_reward(board, move)
+                    memory.append((board, move, new_board, reward, new_board.is_game_over()))
+            
+            dqn_boards = [boards[i] for i in range(num_boards) if i not in rand_indices]
+            if dqn_boards:
+                dqn_moves = get_next_moves(boards=dqn_boards, neural_network=self.policy_dqn)
+                new_dqn_boards = [board.copy() for board in dqn_boards]
+                for i, board in enumerate(new_dqn_boards):
+                    board.push(dqn_moves[i])
+                    
+                for board, move, new_board in zip(dqn_boards, dqn_moves, new_dqn_boards):
+                    reward = get_custom_reward(board, move)
+                    memory.append((board, move, new_board, reward, new_board.is_game_over())) 
 
-    # Train the FrozeLake environment
-    def train(self, episodes: int, render: bool=False, verbose: bool=True):
-        # Create FrozenLake instance
-        env = gym.make('Chess-v0')
-        
-        
-        epsilon = 1 # 1 = 100% random actions
-        memory = ReplayMemory(self.replay_memory_size)
+            boards = new_random_boards + new_dqn_boards
 
+    def train(self, episodes: int,
+              cycles: int,
+              render: bool=False,
+              verbose: bool=False,
+              epsilon_decrease=None,
+              file=None,
+              keep_training=False):
+        """
+        args:
+            episodes (int): Number of games to play
+            cycles (int): Number of game cycles
+            render (bool): Whether to render the game or not
+            verbose (bool): Whether to print information about the game
+            epsilon_decrease (float): Decrease in epsilon after each episode
+            file (str): File to save the network to
+            keep_training (bool): Whether to keep training or start from scratch
+        """
+        
+        self.epsilon = 1
+        self.episodes = episodes
+        self.cycles = cycles
+        self.render = render
+        self.verbose = verbose
+        self.epsilon_decrease = 1/episodes if epsilon_decrease == None else epsilon_decrease
+        memory = ReplayMemory(maxlen=self.replay_memory_size)
+        
         # Create policy and target network. Number of nodes in the hidden layer can be adjusted.
-        policy_dqn = ChessCNN(out_actions=self.num_actions)
-        target_dqn = ChessCNN(out_actions=self.num_actions)
+        self.policy_dqn = ChessCNN(out_actions=self.num_actions)
+        self.target_dqn = ChessCNN(out_actions=self.num_actions)
+        
+        # Load network if file is given
+        if file != None and keep_training == True:
+            if os.path.exists(file):
+                self.policy_dqn.load_state_dict(torch.load(file))
+                print("Network loaded from file: " + file)
+                
 
         # Make the target and policy networks the same (copy weights/biases from one network to the other)
-        target_dqn.load_state_dict(policy_dqn.state_dict())
-
-        # print('Policy (random, before training):')
-        # self.print_dqn(policy_dqn)
+        self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
+        
 
         # Policy network optimizer. "Adam" optimizer can be swapped to something else. 
-        self.optimizer = torch.optim.Adam(policy_dqn.parameters(), lr=self.learning_rate_a)
+        self.optimizer = torch.optim.Adam(self.policy_dqn.parameters(), lr=self.learning_rate_a)
 
-        # List to keep track of rewards collected per episode. Initialize list to 0's.
-        end_by_checkmate = np.zeros(episodes)
-
-        # List to keep track of epsilon decay
-        epsilon_history = []
-
-        # Track number of steps taken. Used for syncing policy => target network.
-        step_count=0
-
-        if verbose:
-            print("Training...")
+        for cycle in range(cycles):
             
-        for i in range(episodes):
             if verbose:
-                print(f"\r{i+1}/{episodes}", end="")
-            board = env.reset()  # Initialize state 
-            done = False 
-
+                print(f"cycle {cycle}, epsilon: {self.epsilon:.4f}")
+                print(f"Simulating {episodes} games...")
             tic = time.time()
-
-            while(not done):
-                
-                legal_moves = env.legal_moves
-                # Select move based on epsilon-greedy
-                if random.random() < epsilon:
-                    # select random move
-                    move = random.choice(legal_moves)
-                    
-                else:
-                    # select best move            
-                    with torch.no_grad():
-                        outputs = policy_dqn(board_to_tensor(board=board))
-                        move = get_best_legal_move(outputs=outputs, board=board)
-                
-                # Promotions only to queen
-                move = ensure_queen_promotion(board=board, move=move)
-
-                # Execute action
-                new_board, reward, done, info = env.step(move)
-                reward = get_custom_reward(board=board, move=move)
-
-                # Save experience into memory
-                memory.append((board, move, new_board, reward, done)) 
-
-                # Move to the next state
-                board = new_board
-
-                # Increment step counter
-                step_count+=1
-
-            # Keep track of the rewards collected per episode.
-            if board.is_checkmate():
-                end_by_checkmate[i] = 1
+            
+            self._simulate_games(memory, episodes)
 
             toc = time.time()
-            if self.time_verbose:
-                print(f"\nSimulation time: {toc-tic}")
+            if self.verbose:
+                print(f"\rSimulation time: {(toc-tic):.4f}")
+                
 
-            # Check if enough experience has been collected
-            if len(memory)>self.mini_batch_size:
-                tic = time.time()
-                mini_batch = memory.sample(self.mini_batch_size)
-                self.optimize(mini_batch, policy_dqn, target_dqn)        
 
-                # Decay epsilon
-                epsilon = max(epsilon - 1/episodes, 0)
-                epsilon_history.append(epsilon)
+            tic = time.time()
+            if self.verbose:
+                print(f"Training policy network...")
+            for _ in range(10): # Zrób 10 kroków nauki na cykl
+                if len(memory) > 128:
+                    batch = memory.sample(128)
+                    self.optimize(batch)
 
-                # Copy policy network to target network after a certain number of steps
-                if step_count > self.network_sync_rate:
-                    target_dqn.load_state_dict(policy_dqn.state_dict())
-                    step_count=0
-                toc = time.time()
-                if self.time_verbose:
-                    print(f"Training time: {toc-tic}, {(toc-tic)/self.mini_batch_size} per move", end='\n\n')
+            # Decay epsilon
+            self.epsilon = max(self.epsilon - self.epsilon_decrease, 0)
 
-        # Close environment
-        env.close()
+            # Copy policy network to target network
+            self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
+
+            toc = time.time()
+            if self.verbose:
+                print(f"Training time: {(toc-tic):.4f}, {((toc-tic)/len(batch)):.4f} per move", end='\n')
 
         # Save policy
-        torch.save(policy_dqn.state_dict(), "chess_dqn.pt")
-
-        # Create new graph 
-        plt.figure(1)
-
-        # Plot average checkmates (Y-axis) vs episodes (X-axis)
-        sum_checkmates = np.zeros(episodes)
-        for x in range(episodes):
-            sum_checkmates[x] = np.sum(end_by_checkmate[max(0, x-100):(x+1)])
-        plt.subplot(121) # plot on a 1 row x 2 col grid, at cell 1
-        plt.plot(sum_checkmates)
-        
-        # Plot epsilon decay (Y-axis) vs episodes (X-axis)
-        plt.subplot(122) # plot on a 1 row x 2 col grid, at cell 2
-        plt.plot(epsilon_history)
-        
-        # Save plots
-        plt.savefig('chess_dqn.png')
+        if file == None:
+            file = "chess_dqn.pt"
+        torch.save(self.policy_dqn.state_dict(), file)
         print("\nTraining complete.")
 
     # Optimize policy network
-    def optimize(self, mini_batch, policy_dqn, target_dqn):
+    def optimize(self, batch):   
+        boards, moves, new_boards, rewards, dones = zip(*batch)
+        
+        tensor_input_curr = torch.vstack([board_to_tensor(board=b) for b in boards])
+        all_q_values = self.policy_dqn(tensor_input_curr)
 
-        # Get number of input nodes
-        num_states = policy_dqn.fc1.in_features
+        move_indices = torch.tensor([move_to_index(m) for m in moves]).reshape(-1, 1)
+        current_q_values = all_q_values.gather(1, move_indices).squeeze(-1)
 
-        current_q_list = []
-        target_q_list = []
-
-        for board, move, new_board, reward, done in mini_batch:
-
-            if done: 
-                # The agent achieves checkmate (reward=10) or a draw (reward=0)
-                target = torch.FloatTensor([reward])
-
-            else:
-                # Evaluate the opponent's best move and penalize the agent for enabling it.
-                # Similar to Negamax
-                with torch.no_grad():
-                    next_moves_reward = reward_of_next_moves(original_board=new_board, n_moves=self.moves_to_evaluate, target_dqn=target_dqn)
-                    target = torch.FloatTensor(
-                        [reward + (self.discount_factor_g * next_moves_reward)]
-                    )
-                    
-            # Get the current set of Q values
-            current_q = policy_dqn(board_to_tensor(board=board)).flatten()
-            current_q_list.append(current_q)
-            
-            # Get the target set of Q values
+        enemy_rewards = rewards_of_next_move(new_boards, self.target_dqn)
+        combined_rewards = torch.tensor([float(r - e_r) for r, e_r in zip(rewards, enemy_rewards)])
+        
+        target_q_values = torch.zeros(len(boards))
+        active_indices = [i for i, b in enumerate(new_boards) if not b.is_game_over()]
+        
+        if active_indices:
+            active_boards = [new_boards[i] for i in active_indices]
+            tensor_input_next = torch.vstack([board_to_tensor(board=b) for b in active_boards])
             with torch.no_grad():
-                target_q = target_dqn(board_to_tensor(board=board)).flatten().detach()
-            move_idx = move_to_index(move=move)
-            target_q[move_idx] = target.item()
-            target_q_list.append(target_q)
+                next_max_q = self.target_dqn(tensor_input_next).max(1)[0]
                 
-        # Compute loss for the whole minibatch
-        loss = self.loss_fn(torch.stack(current_q_list), torch.stack(target_q_list))
+            target_q_values[active_indices] = combined_rewards[active_indices] + self.discount_factor_g * next_max_q
+        
+        terminal_indices = [i for i, b in enumerate(new_boards) if b.is_game_over()]
+        if terminal_indices:
+            target_q_values[terminal_indices] = combined_rewards[terminal_indices]
 
-        # Optimize the model
+        loss = self.loss_fn(current_q_values, target_q_values.detach())
+
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+        
+        return loss.item()
 
     # Run the Chess environment with the learned policy
-    def test(self, episodes, verbose=True):
+    def test(self, episodes, verbose=True, file="chess_dqn.pt"):
         # Create Chess instance
         env = gym.make('Chess-v0')
 
         # Load learned policy
         policy_dqn = ChessCNN(out_actions=self.num_actions) 
-        policy_dqn.load_state_dict(torch.load("chess_dqn.pt"))
+        policy_dqn.load_state_dict(torch.load(file))
         policy_dqn.eval()    # switch model to evaluation mode
-
-        # print('Policy (trained):')
-        # self.print_dqn(policy_dqn)
 
         for i in range(episodes):
             board = env.reset()  # Initialize to state 0
@@ -382,40 +394,46 @@ class ChessDQN():
             while(not done):  
                 # Select best move   
                 with torch.no_grad():
-                    outputs = policy_dqn(board_to_tensor(board=board))
-                    move = get_best_legal_move(outputs=outputs, board=board)
+                    output = policy_dqn(board_to_tensor(board=board))
+                    move = get_best_legal_move(output=output[0], board=board)
 
                 # Execute move
                 new_board, reward, done, info = env.step(move)
                 if verbose:
                     print(env.render(), end='\n\n')
                 board = new_board
+            print(f"end: {board.is_game_over()}")
+            print(f"checkmate: {board.is_checkmate()}")
 
+            print("\n" + "="*30)
+            res = board.result() # Zwraca "1-0", "0-1", "1/2-1/2" lub "*"
+            
+            if res == "1-0":
+                print("WYNIK: 1-0 (Wygrana Białych)")
+            elif res == "0-1":
+                print("WYNIK: 0-1 (Wygrana Czarnych)")
+            elif res == "1/2-1/2":
+                print("WYNIK: 1/2-1/2 (Remis)")
+            else:
+                print("WYNIK: Gra nie została rozstrzygnięta (*)")
+
+            # Szczegółowy powód na podstawie flag, które mi wysłałeś:
+            if board.is_checkmate():
+                print("POWÓD: Mat")
+            elif board.is_stalemate():
+                print("POWÓD: Pat")
+            elif board.is_insufficient_material():
+                print("POWÓD: Niewystarczający materiał")
+            elif board.is_seventyfive_moves():
+                print("POWÓD: Zasada 75 ruchów")
+            elif board.is_fivefold_repetition():
+                print("POWÓD: Pięciokrotne powtórzenie")
+            
+            print("="*30)
         env.close()
-
-    # def print_dqn(self, dqn):
-    #     # Get number of input nodes
-    #     num_states = dqn.fc1.in_features
-
-    #     # Loop each state and print policy to console
-    #     for s in range(num_states):
-    #         #  Format q values for printing
-    #         q_values = ''
-    #         for q in dqn(self.state_to_dqn_input(s, num_states)).tolist():
-    #             q_values += "{:+.2f}".format(q)+' '  # Concatenate q values, format to 2 decimals
-    #         q_values=q_values.rstrip()              # Remove space at the end
-
-    #         # Map the best action to L D R U
-    #         best_action = self.ACTIONS[dqn(self.state_to_dqn_input(s, num_states)).argmax()]
-
-    #         # Print policy in the format of: state, action, q values
-    #         # The printed layout matches the FrozenLake map.
-    #         print(f'{s:02},{best_action},[{q_values}]', end=' ')         
-    #         if (s+1)%4==0:
-    #             print() # Print a newline every 4 states
 
 if __name__ == '__main__':
 
     chess_dqn = ChessDQN()
-    chess_dqn.train(50)
-    chess_dqn.test(1)
+    chess_dqn.train(10, 5, epsilon_decrease=0, file="chess_dqn1.pt", verbose=True, keep_training=True)
+    chess_dqn.test(1, file="chess_dqn1.pt")
