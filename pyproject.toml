@@ -3,9 +3,28 @@ name = "rl-chess"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13.12"
 dependencies = [
     "gym-chess>=0.1.1",
     "gymnasium>=1.2.3",
+    "matplotlib>=3.10.8",
+    "python-chess>=0.31.4",
     "torch>=2.10.0",
 ]
+
+[project.scripts]
+rl-chess = "rl_chess:main"
+
+[build-system]
+requires = ["uv_build>=0.10.12,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.1",
+    "ruff>=0.15.8",
+]
+
+[tool.ruff]
+line-length = 80
+target-version = "py313"
