@@ -10,6 +10,7 @@ dependencies = [
     "matplotlib>=3.10.8",
     "pydantic-settings>=2.13.1",
     "python-chess>=0.31.4",
+    "pyyaml>=6.0.3",
     "torch>=2.5.0",
     "torchaudio>=2.5.1",
     "torchvision>=0.20.1",

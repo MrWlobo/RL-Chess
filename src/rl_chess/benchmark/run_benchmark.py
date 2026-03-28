@@ -1,12 +1,12 @@
 import argparse
 import inspect
-import json
 import random
 from datetime import datetime
 from pathlib import Path
 
 import chess
 import chess.pgn
+import yaml
 from chess.pgn import Game
 
 from rl_chess.agents.base import ChessAgent
@@ -161,8 +161,11 @@ class ChessBenchmark:
                 self._add_result(game, curr_opponent, is_opponent_black=False)
 
     def save_results(self) -> None:
-        with self.output_file.open("w", encoding="utf-8") as f:
-            json.dump(self.results, f, indent=4)
+        yaml_file = self.output_file.with_suffix(".yaml")
+        with yaml_file.open("w", encoding="utf-8") as f:
+            yaml.dump(
+                self.results, f, default_flow_style=False, sort_keys=False
+            )
 
     def _play_game(
         self, board: chess.Board, white: ChessAgent, black: ChessAgent
@@ -241,7 +244,7 @@ def _build_cli() -> argparse.ArgumentParser:
         "--output-file",
         type=str,
         default=None,
-        help="File to save the benchmark results. Defaults to '<agent_name>_<YYYYMMDD_HHMM>.json'",
+        help="File to save the benchmark results. Defaults to '<agent_name>_<YYYYMMDD_HHMM>.yaml'",
     )
     parser.add_argument(
         "--pass-threshold",
