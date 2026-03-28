@@ -5,8 +5,7 @@ import chess.engine
 
 
 class MaiaAgent:
-    def __init__(self, name: str, weight_path: Path, exe_path: Path):
-        self.name = name
+    def __init__(self, weight_path: Path, exe_path: Path):
         self.weight_path = weight_path
         self.exe_path = exe_path
         self.engine: chess.engine.SimpleEngine | None = None
@@ -25,10 +24,10 @@ class MaiaAgent:
             self.engine.quit()
             self.engine = None
 
-    def get_move(self, board: chess.Board) -> chess.Move:
+    def predict(self, board: chess.Board) -> chess.Move:
         if not self.engine:
             raise RuntimeError(
                 "Engine not started. Use 'with MaiaAgent(...) as agent:'"
             )
         result = self.engine.play(board, self.limit)
-        return result.move
+        return result.move  # ty:ignore[invalid-return-type]

@@ -1,5 +1,5 @@
-from rl_chess.agents.custom.random_test import RandomTest
+from rl_chess.agents.custom.dqn_agent import DQNAgent
 
 AGENT_REGISTRY = {
-    "RandomTest": RandomTest,
+    "DQNAgent": DQNAgent,
 }
