@@ -18,7 +18,7 @@ The CLI is structured into **Global Options** (for the benchmark itself) and **A
 | `--games` | Total number of games per opponent (split evenly between playing as White and Black). | `100` |
 | `--pass-threshold` | Win rate (0.0 to 1.0) required to advance to the next opponent. | `0.5` |
 | `--deterministic` | Flag to disable shuffling of starting FEN positions. | `False` |
-| `--output-file` | Custom filename for the JSON results. | `<agent>_<timestamp>.json` |
+| `--output-file` | Custom filename for the YAML results. | `<agent>_<timestamp>.yaml` |
 
 *Example: Run a deterministic benchmark, 50 games per opponent, with a 75% win rate required to keep testing against even stronger opponents:*
 ```bash
