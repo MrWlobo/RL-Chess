@@ -40,41 +40,59 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class ChessCNN(nn.Module):
-    def __init__(self, out_actions=4096):
+class ResBlock(nn.Module):
+    def __init__(self, channels):
         super().__init__()
-
-        # 1. Pierwsza warstwa konwolucyjna
-        # In_channels = 17 (Twoje warstwy planszy)
-        # Out_channels = 64 (Liczba filtrów, które uczą się cech)
-        self.conv1 = nn.Conv2d(17, 64, kernel_size=3, padding=1)
-        
-        # 2. Druga warstwa konwolucyjna
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        
-        # 3. Warstwa w pełni połączona (Linear)
-        # Po konwolucjach z padding=1, rozmiar to nadal 8x8.
-        # Więc wejście do Linear to: 128 filtrów * 8 * 8 px
-        self.fc1 = nn.Linear(128 * 8 * 8, 512)
-        
-        # 4. Wyjście (4096 akcji)
-        self.out = nn.Linear(512, out_actions)
+        self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(channels)
+        self.conv2 = nn.Conv2d(channels, channels, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(channels)
 
     def forward(self, x):
-        # x shape: [batch, 17, 8, 8]
+        residual = x
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        out += residual  # Skip connection!
+        return F.relu(out)
+
+class ChessResNet(nn.Module):
+    def __init__(self, num_res_blocks=10, channels=128):
+        super().__init__()
+        # Warstwa wejściowa
+        self.start_conv = nn.Conv2d(17, channels, kernel_size=3, padding=1)
+        self.bn_start = nn.BatchNorm2d(channels)
         
-        # Przepuszczamy przez konwolucje z aktywacją ReLU
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
+        # Wieża rezydualna (Tu 3060 Ti pokaże moc)
+        self.res_blocks = nn.ModuleList([ResBlock(channels) for _ in range(num_res_blocks)])
         
-        # "Spłaszczamy" tensor z (8, 8, 128) na jeden długi wektor
-        x = x.view(x.size(0), -1) 
+        # Policy Head (Ruchy)
+        self.policy_conv = nn.Conv2d(channels, 2, kernel_size=1)
+        self.policy_fc = nn.Linear(2 * 8 * 8, 4096)
         
-        # Warstwy klasyczne
-        x = F.relu(self.fc1(x))
-        x = self.out(x)
+        # Value Head (Ocena pozycji)
+        self.value_conv = nn.Conv2d(channels, 1, kernel_size=1)
+        self.value_fc1 = nn.Linear(1 * 8 * 8, 64)
+        self.value_fc2 = nn.Linear(64, 1)
+
+    def forward(self, x):
+        x = F.relu(self.bn_start(self.start_conv(x)))
         
-        return x
+        for block in self.res_blocks:
+            x = block(x)
+            
+        # Policy
+        p = F.relu(self.policy_conv(x))
+        p = p.view(p.size(0), -1)
+        policy = self.policy_fc(p)
+        
+        # Value
+        v = F.relu(self.value_conv(x))
+        v = v.view(v.size(0), -1)
+        v = F.relu(self.value_fc1(v))
+        value = torch.tanh(self.value_fc2(v))
+        
+        # return policy, value
+        return policy
     
 class ReplayMemory():
     def __init__(self, maxlen):
@@ -136,7 +154,7 @@ def board_to_array(board: chess.Board) -> np.ndarray:
 def boards_to_tensor(boards: list[chess.Board]):
     array_list = [board_to_array(board=board) for board in boards]
     single_ndarray = np.array(array_list)
-    return torch.from_numpy(single_ndarray).to(ChessDQN.device).float()
+    return torch.from_numpy(single_ndarray).to(ChessRES.device).float()
 
 def ensure_queen_promotion(board: chess.Board, move: chess.Move) -> chess.Move:
     piece = board.piece_at(move.from_square)
@@ -207,7 +225,7 @@ def get_next_moves(boards: list[chess.Board], neural_network: nn.Module) -> list
     moves = [get_best_legal_move(output=output, board=board) for output, board in zip(outputs, boards)]
     return moves
 
-class ChessDQN():
+class ChessRES():
     # Hyperparameters (adjustable)
     learning_rate_a = 0.001         # learning rate (alpha)
     discount_factor_g = 0.9        # discount rate (gamma)    
@@ -220,10 +238,10 @@ class ChessDQN():
 
     def __init__(self, device_type="cpu"):
         if device_type in ["cuda", "cpu"]:
-            ChessDQN.device = torch.device(device_type)
+            ChessRES.device = torch.device(device_type)
         else:
             raise ValueError(f"Device type {device_type} is not supported. Must be one of ['cuda', 'cpu']")
-        self.scaler = torch.amp.GradScaler("cuda") if ChessDQN.device.type == "cuda" else None
+        self.scaler = torch.amp.GradScaler("cuda") if ChessRES.device.type == "cuda" else None
 
     def _simulate_games(self, memory: ReplayMemory, episodes: int):
         boards = [chess.Board() for _ in range(episodes)]
@@ -236,7 +254,7 @@ class ChessDQN():
             rand_indices = set([i for i,x in enumerate(random_mask) if x == 1])
             
             new_random_boards = []
-            new_dqn_boards = []
+            new_res_boards = []
             
             random_boards = [boards[i] for i in rand_indices]
             if random_boards:
@@ -249,18 +267,18 @@ class ChessDQN():
                     reward = get_custom_reward(board, move)
                     memory.append((board, move, new_board, reward, new_board.is_game_over())) 
             
-            dqn_boards = [boards[i] for i in range(num_boards) if i not in rand_indices]
-            if dqn_boards:
-                dqn_moves = get_next_moves(boards=dqn_boards, neural_network=self.policy_dqn)
-                new_dqn_boards = [board.copy() for board in dqn_boards]
-                for i, board in enumerate(new_dqn_boards):
-                    board.push(dqn_moves[i])
+            res_boards = [boards[i] for i in range(num_boards) if i not in rand_indices]
+            if res_boards:
+                res_moves = get_next_moves(boards=res_boards, neural_network=self.policy_res)
+                new_res_boards = [board.copy() for board in res_boards]
+                for i, board in enumerate(new_res_boards):
+                    board.push(res_moves[i])
                     
-                for board, move, new_board in zip(dqn_boards, dqn_moves, new_dqn_boards):
+                for board, move, new_board in zip(res_boards, res_moves, new_res_boards):
                     reward = get_custom_reward(board, move)
                     memory.append((board, move, new_board, reward, new_board.is_game_over())) 
 
-            boards = new_random_boards + new_dqn_boards
+            boards = new_random_boards + new_res_boards
 
     def train(self, episodes: int,
               cycles: int,
@@ -268,7 +286,8 @@ class ChessDQN():
               verbose: bool=False,
               epsilon_decrease=None,
               file=None,
-              keep_training=False):
+              keep_training=False,
+              device="cpu"):
         """
         args:
             episodes (int): Number of games to play
@@ -289,23 +308,22 @@ class ChessDQN():
         memory = ReplayMemory(maxlen=self.replay_memory_size)
         
         # Create policy and target network. Number of nodes in the hidden layer can be adjusted.
-        self.policy_dqn = ChessCNN().to(ChessDQN.device)
-        self.target_dqn = ChessCNN().to(ChessDQN.device)
+        self.policy_res = ChessResNet().to(ChessRES.device)
+        self.target_res = ChessResNet().to(ChessRES.device)
         
         # Load network if file is given
         if file != None and keep_training == True:
             if os.path.exists(file):
-                self.policy_dqn.load_state_dict(torch.load(file, map_location=ChessDQN.device, weights_only=True))
+                self.policy_res.load_state_dict(torch.load(file, map_location=ChessRES.device, weights_only=True))
                 print("Network loaded from file: " + file)
         if file == None:
-            file = "chess_dqn.pt"
+            file = "chess_res.pt"
 
         # Make the target and policy networks the same (copy weights/biases from one network to the other)
-        self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
+        self.target_res.load_state_dict(self.policy_res.state_dict())
         
-
         # Policy network optimizer. "Adam" optimizer can be swapped to something else. 
-        self.optimizer = torch.optim.Adam(self.policy_dqn.parameters(), lr=self.learning_rate_a)
+        self.optimizer = torch.optim.Adam(self.policy_res.parameters(), lr=self.learning_rate_a)
 
         for cycle in range(cycles):
             
@@ -334,15 +352,15 @@ class ChessDQN():
             self.epsilon = max(self.epsilon - self.epsilon_decrease, 0.05)
 
             # Copy policy network to target network
-            self.target_dqn.load_state_dict(self.policy_dqn.state_dict())
+            self.target_res.load_state_dict(self.policy_res.state_dict())
 
-            torch.save(self.policy_dqn.state_dict(), file)
+            torch.save(self.policy_res.state_dict(), file)
             toc = time.time()
             if self.verbose:
                 print(f"Training time: {(toc-tic):.4f}, {((toc-tic)/len(batch)):.4f} per move", end='\n')
 
         # Save policy
-        torch.save(self.policy_dqn.state_dict(), file)
+        torch.save(self.policy_res.state_dict(), file)
         print("\nTraining complete.")
 
     # Optimize policy network
@@ -350,22 +368,22 @@ class ChessDQN():
         boards, moves, new_boards, rewards, dones = zip(*batch)
         
         tensor_input_curr = boards_to_tensor(boards=boards)
-        all_q_values = self.policy_dqn(tensor_input_curr)
+        all_q_values = self.policy_res(tensor_input_curr)
 
-        move_indices = torch.tensor([move_to_index(m) for m in moves], device=ChessDQN.device).reshape(-1, 1)
+        move_indices = torch.tensor([move_to_index(m) for m in moves], device=ChessRES.device).reshape(-1, 1)
         current_q_values = all_q_values.gather(1, move_indices).squeeze(-1)
 
-        enemy_rewards = rewards_of_next_move(new_boards, self.target_dqn)
-        combined_rewards = torch.tensor([float(r - e_r) for r, e_r in zip(rewards, enemy_rewards)], device=ChessDQN.device)
+        enemy_rewards = rewards_of_next_move(new_boards, self.target_res)
+        combined_rewards = torch.tensor([float(r - e_r) for r, e_r in zip(rewards, enemy_rewards)], device=ChessRES.device)
         
-        target_q_values = torch.zeros(len(boards), device=ChessDQN.device)
+        target_q_values = torch.zeros(len(boards), device=ChessRES.device)
         active_indices = [i for i, b in enumerate(new_boards) if not b.is_game_over()]
         
         if active_indices:
             active_boards = [new_boards[i] for i in active_indices]
             tensor_input_next = boards_to_tensor(boards=active_boards)
             with torch.no_grad():
-                next_max_q = self.target_dqn(tensor_input_next).max(1)[0]
+                next_max_q = self.target_res(tensor_input_next).max(1)[0]
                 
             target_q_values[active_indices] = combined_rewards[active_indices] + self.discount_factor_g * next_max_q
         
@@ -376,7 +394,7 @@ class ChessDQN():
         
         self.optimizer.zero_grad()
 
-        if ChessDQN.device.type == "cuda":
+        if ChessRES.device.type == "cuda":
             with torch.amp.autocast("cuda"):
                 loss = self.loss_fn(current_q_values, target_q_values.detach())
 
@@ -391,14 +409,14 @@ class ChessDQN():
         return loss.item()
 
     # Run the Chess environment with the learned policy
-    def test(self, episodes, verbose=True, file="chess_dqn.pt"):
+    def test(self, episodes, verbose=True, file="chess_res.pt"):
         # Create Chess instance
         env = gym.make('Chess-v0')
 
         # Load learned policy
-        policy_dqn = ChessCNN(out_actions=self.num_actions).to(ChessDQN.device)
-        policy_dqn.load_state_dict(torch.load(file, map_location=ChessDQN.device, weights_only=True))
-        policy_dqn.eval()    # switch model to evaluation mode
+        policy_res = ChessResNet().to(ChessRES.device)
+        policy_res.load_state_dict(torch.load(file, map_location=ChessRES.device, weights_only=True))
+        policy_res.eval()    # switch model to evaluation mode
 
         for i in range(episodes):
             board = env.reset()  # Initialize to state 0
@@ -409,7 +427,7 @@ class ChessDQN():
             while(not done):  
                 # Select best move   
                 with torch.no_grad():
-                    output = policy_dqn(boards_to_tensor(board=board))
+                    output = policy_res(boards_to_tensor(board=board))
                     move = get_best_legal_move(output=output[0], board=board)
 
                 # Execute move
@@ -448,9 +466,9 @@ class ChessDQN():
         env.close()
 
 if __name__ == '__main__':
-    chess_dqn = ChessDQN(device_type="cuda")  # "cpu" or "cuda", cpu works better using small models
-    chess_dqn.train(25, 1000, epsilon_decrease=None,
-                    file="chess_dqn1.pt",
+    chess_res = ChessRES(device_type="cuda")     # "cpu" or "cuda", cpu works better using small models
+    chess_res.train(1, 1000, epsilon_decrease=None,
+                    file="chess_res1.pt",
                     verbose=True,
                     keep_training=True)  
-    chess_dqn.test(1, file="chess_dqn1.pt")
+    chess_res.test(1, file="chess_res1.pt")
