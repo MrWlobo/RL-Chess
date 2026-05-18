@@ -12,7 +12,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from rl_chess.utils.MonteCarloTreeSearch import MonteCarloTreeSearch
-from rl_chess.utils.training import (
+from rl_chess.utils.train_utils import (
     board_to_tensor,
     boards_to_tensor,
     get_next_moves,

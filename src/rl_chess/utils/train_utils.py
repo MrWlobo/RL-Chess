@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from concurrent.futures import ProcessPoolExecutor
 from typing import TYPE_CHECKING
 
 import chess
@@ -14,6 +15,15 @@ if TYPE_CHECKING:
     from rl_chess.utils.MonteCarloTreeSearch import (
         MonteCarloTreeSearch,  # noqa: TC004
     )
+
+_executor = None
+
+
+def get_executor() -> ProcessPoolExecutor:
+    global _executor
+    if _executor is None:
+        _executor = ProcessPoolExecutor(max_workers=4)
+    return _executor
 
 
 def board_to_array(board: chess.Board) -> np.ndarray:
@@ -74,7 +84,9 @@ def board_to_array(board: chess.Board) -> np.ndarray:
 
 
 def boards_to_tensor(boards: list[chess.Board], device: torch.device):
-    array_list = [board_to_array(board=board) for board in boards]
+    executor = get_executor()
+    array_list = list(executor.map(board_to_array, boards))
+    # array_list = [board_to_array(board=board) for board in boards]        # better for small batches
     single_ndarray = np.array(array_list)
     return torch.from_numpy(single_ndarray).to(device).float()
 
