@@ -84,9 +84,11 @@ def board_to_array(board: chess.Board) -> np.ndarray:
 
 
 def boards_to_tensor(boards: list[chess.Board], device: torch.device):
-    executor = get_executor()
-    array_list = list(executor.map(board_to_array, boards))
-    # array_list = [board_to_array(board=board) for board in boards]        # better for small batches
+    # executor = get_executor()
+    # array_list = list(executor.map(board_to_array, boards))
+    array_list = [
+        board_to_array(board=board) for board in boards
+    ]  # better for small batches
     single_ndarray = np.array(array_list)
     return torch.from_numpy(single_ndarray).to(device).float()
 
@@ -170,6 +172,7 @@ def get_next_moves(
     boards: list[chess.Board],
     neural_network: nn.Module,
     device: torch.device,
+    move_count: int,
     move_search: MonteCarloTreeSearch | None = None,
 ) -> list[chess.Move]:
     if move_search is None:
@@ -182,16 +185,14 @@ def get_next_moves(
         ]
     print("Using MCTS")
     tic = time.time()
-    moves = [
-        move_search.search(
-            initial_state=board.fen(),
-            neural_network=neural_network,
-            device=device,
-        )
-        for board in boards
-    ]
+    moves = move_search.batch_search(
+        move_count=move_count,
+        initial_fens=[board.fen() for board in boards],
+        neural_network=neural_network,
+        device=device,
+    )
     toc = time.time()
-    print(f"MCTS Time: {toc - tic} ##############################")
+    print(f"MCTS Time: {toc - tic}")
     return [
         ensure_queen_promotion(move=move, board=board)
         for move, board in zip(moves, boards, strict=True)

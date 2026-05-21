@@ -157,61 +157,42 @@ class ChessRES:
             else None
         )
 
-    def _simulate_games(self, memory: ReplayMemory, episodes: int):
-        boards_wrapper = {i: chess.Board() for i in range(episodes)}
-        active_boards = boards_wrapper.copy()
-        while active_boards:
-            current_keys = list(active_boards.keys())
+    def _simulate_games(
+        self, memory: ReplayMemory, episodes: int, max_moves: int = 150
+    ):
+        active_boards = {i: chess.Board() for i in range(episodes)}
+        move_count = 0
+        while active_boards and move_count < max_moves:
             num_boards = len(active_boards)
+
             if self.verbose:
-                print(f"\rGames left: {num_boards}  ", end="")
-            random_mask = [
-                random.random() < self.epsilon for _ in range(num_boards)
-            ]
-            rand_indices = {
-                current_keys[i] for i, x in enumerate(random_mask) if x == 1
-            }
-
-            random_boards_dict = {i: active_boards[i] for i in rand_indices}
-            if random_boards_dict:
-                random_boards = list(random_boards_dict.values())
-                random_moves = [
-                    random.choice(list(board.legal_moves))
-                    for board in random_boards
-                ]
-
-                for (i, board), move in zip(
-                    random_boards_dict.items(), random_moves, strict=True
-                ):
-                    fen = board.fen()
-                    reward = execute_move_with_reward(board, move)
-                    memory.append((fen, move, reward))
-                    if board.is_game_over():
-                        active_boards.pop(i)
-
-            res_boards_dict = {
-                i: board
-                for i, board in active_boards.items()
-                if i not in rand_indices
-            }
-            if res_boards_dict:
-                res_boards = list(res_boards_dict.values())
-
-                res_moves = get_next_moves(
-                    boards=res_boards,
-                    neural_network=self.policy_res,
-                    device=ChessRES.device,
-                    move_search=self.move_search,
+                print(
+                    f"\rGames left: {num_boards}, moves: {move_count} ", end=""
                 )
 
-                for (i, board), move in zip(
-                    res_boards_dict.items(), res_moves, strict=True
-                ):
-                    fen = board.fen()
-                    reward = execute_move_with_reward(board, move)
-                    memory.append((fen, move, reward))
-                    if board.is_game_over():
-                        active_boards.pop(i)
+            active_boards_list = list(active_boards.values())
+
+            moves = get_next_moves(
+                move_count=move_count,
+                boards=active_boards_list,
+                neural_network=self.policy_res,
+                device=ChessRES.device,
+                move_search=self.move_search,
+            )
+
+            finished_games = []
+
+            for (i, board), move in zip(
+                active_boards.items(), moves, strict=True
+            ):
+                fen = board.fen()
+                reward = execute_move_with_reward(board, move)
+                memory.append((fen, move, reward))
+                if board.is_game_over():
+                    finished_games.append(i)
+            for i in finished_games:
+                del active_boards[i]
+            move_count += 1
 
     def train(
         self,
@@ -300,16 +281,17 @@ class ChessRES:
                     self.optimize(batch)
 
             # Decay epsilon
-            self.epsilon = max(self.epsilon - self.epsilon_decrease, 0.05)
+            self.epsilon = max(self.epsilon - self.epsilon_decrease, 0.00)
 
             # Copy policy network to target network
             self.target_res.load_state_dict(self.policy_res.state_dict())
             current_file = (
                 file[: file.find(".")] + "_" + str(cycle // 100) + ".pt"
             )
-            current_file_path = (
-                Path(__file__).parent.resolve() / "trained" / (current_file)
-            )
+            trained_dir = Path(__file__).parent.resolve() / "trained"
+            trained_dir.mkdir(parents=True, exist_ok=True)
+
+            current_file_path = trained_dir / current_file
             torch.save(self.policy_res.state_dict(), current_file_path)
             toc = time.time()
             if self.verbose:
@@ -506,15 +488,13 @@ if __name__ == "__main__":
         device_type="cuda"
     )  # "cpu" or "cuda", cpu works better using small models
 
-    MCTS = MonteCarloTreeSearch(c_puct=1.4, num_simulations=10)
+    MCTS = MonteCarloTreeSearch(c_puct=1.4, num_searches=100)
 
     train_params = {
         "episodes": 100,  # episodes per cycle
         "cycles": 2000,
-        "epsilon": 0.4,
-        "epsilon_decrease": (
-            1 / 1600
-        ),  # decault decay (epsilon_decrease = 1/cycles)
+        "epsilon": 0,
+        "epsilon_decrease": (0),  # decault decay (epsilon_decrease = 1/cycles)
         "file": "chess_res2.pt",
         "verbose": True,
         "keep_training": True,
