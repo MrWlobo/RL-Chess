@@ -1,6 +1,6 @@
 import random
 import time
-from collections import deque
+from collections import defaultdict, deque
 from pathlib import Path
 
 import chess
@@ -16,7 +16,6 @@ from rl_chess.utils.train_utils import (
     board_to_tensor,
     boards_to_tensor,
     get_next_moves,
-    move_to_index,
 )
 
 
@@ -136,9 +135,9 @@ class ChessRES:
     discount_factor_g = 0.99  # discount rate (gamma)
     replay_memory_size = 200_000  # size of replay memory
     mini_batch_size = (
-        1024  # size of the training data set sampled from the replay memory
+        256  # size of the training data set sampled from the replay memory
     )
-    batches_per_cycle = 30  # number of batches to train on per cycle
+    batches_per_cycle = 120  # number of batches to train on per cycle
 
     # Neural Network
     loss_fn = nn.SmoothL1Loss()  # NN Loss function. MSE=Mean Squared Error can be swapped to something else.
@@ -162,6 +161,9 @@ class ChessRES:
     ):
         active_boards = {i: chess.Board() for i in range(episodes)}
         move_count = 0
+
+        outcomes = [0] * episodes
+        temp_memory = defaultdict(list)
         while active_boards and move_count < max_moves:
             num_boards = len(active_boards)
 
@@ -172,7 +174,7 @@ class ChessRES:
 
             active_boards_list = list(active_boards.values())
 
-            moves = get_next_moves(
+            moves, pi_target_list = get_next_moves(
                 move_count=move_count,
                 boards=active_boards_list,
                 neural_network=self.policy_res,
@@ -182,17 +184,28 @@ class ChessRES:
 
             finished_games = []
 
-            for (i, board), move in zip(
-                active_boards.items(), moves, strict=True
+            for (i, board), move, pi_targets in zip(
+                active_boards.items(), moves, pi_target_list, strict=True
             ):
-                fen = board.fen()
-                reward = execute_move_with_reward(board, move)
-                memory.append((fen, move, reward))
+                board.push(move)
+                temp_memory[i].append([board.fen(), pi_targets])
                 if board.is_game_over():
+                    if board.is_checkmate():
+                        outcomes[i] = 1.0
+                    else:
+                        outcomes[i] = 0.0
                     finished_games.append(i)
             for i in finished_games:
                 del active_boards[i]
             move_count += 1
+        print()
+        for i in range(episodes):
+            outcome = outcomes[i]
+            for obs in reversed(temp_memory[i]):
+                fen, pi_targets = obs
+                memory.append((fen, pi_targets, outcome))
+                outcome *= -1
+        return outcomes
 
     def train(
         self,
@@ -272,13 +285,13 @@ class ChessRES:
             if self.verbose:
                 print("Training policy network...")
             moves_optimized = 0
-            for _ in range(
+            for i in range(
                 self.batches_per_cycle
             ):  # Zrób 10 kroków nauki na cykl
                 if len(memory) > self.mini_batch_size:
                     batch = memory.sample(self.mini_batch_size)
                     moves_optimized += len(batch)
-                    self.optimize(batch)
+                    self.optimize(batch, verbose=(i % 20 == 0) and self.verbose)
 
             # Decay epsilon
             self.epsilon = max(self.epsilon - self.epsilon_decrease, 0.00)
@@ -308,61 +321,35 @@ class ChessRES:
         print("\nTraining complete.")
 
     # Optimize policy network
-    def optimize(self, batch):
-        fens, moves, rewards = zip(*batch, strict=True)
+    def optimize(self, batch, verbose=False):
+        fens, pi_target_list, value_targets = zip(*batch, strict=True)
         boards = [chess.Board(fen=f) for f in fens]
-
-        tensor_input_curr = boards_to_tensor(
-            boards=boards, device=ChessRES.device
+        tensor_input = boards_to_tensor(boards=boards, device=ChessRES.device)
+        pi_targets = torch.tensor(
+            np.array(pi_target_list), device=ChessRES.device
+        ).float()
+        value_targets = (
+            torch.tensor(np.array(value_targets), device=ChessRES.device)
+            .float()
+            .unsqueeze(1)
         )
-        logits, values = self.policy_res(tensor_input_curr)
 
-        # --- POLICY LOSS (Głowica Ruchów) ---
-        move_indices = torch.tensor(
-            [move_to_index(m) for m in moves], device=ChessRES.device
-        )
-        policy_loss = F.cross_entropy(logits, move_indices)
+        logits, values = self.policy_res(tensor_input)
 
-        # make a move
-        for i, board in enumerate(boards):
-            board.push(moves[i])
-
-        new_boards = boards
-
-        # --- VALUE LOSS (Głowica Oceny Pozycji) ---
-        with torch.no_grad():
-            active_indices = [
-                i for i, b in enumerate(new_boards) if not b.is_game_over()
-            ]
-            target_values = (
-                torch.tensor(rewards, device=ChessRES.device)
-                .float()
-                .unsqueeze(1)
+        log_probs = F.log_softmax(logits, dim=1)
+        policy_loss = F.kl_div(log_probs, pi_targets, reduction="batchmean")
+        value_loss = F.mse_loss(values, value_targets)
+        if verbose:
+            print(
+                f"Policy loss: {policy_loss:.4f}, Value loss: {value_loss:.4f}"
             )
-
-            if active_indices:
-                active_boards = [new_boards[i] for i in active_indices]
-                tensor_input_next = boards_to_tensor(
-                    boards=active_boards, device=ChessRES.device
-                )
-                _, next_values = self.target_res(tensor_input_next)
-                target_values[active_indices] = (
-                    target_values[active_indices]
-                    - (self.discount_factor_g * next_values)
-                ).clamp(-1.0, 1.0)
-
-        value_loss = F.mse_loss(values, target_values.detach())
-
-        # --- TOTAL LOSS ---
-        # Łączymy obie straty. Możesz dodać mnożnik (np. 0.5) dla value_loss,
-        # aby zbalansować naukę ruchów i oceny.
+        # total_loss = policy_loss + value_loss
         total_loss = policy_loss + (value_loss * 0.1)
 
         self.optimizer.zero_grad()
 
         if ChessRES.device.type == "cuda":
             with torch.amp.autocast("cuda"):
-                # Ponowne obliczenie jeśli używasz autocast dla stabilności
                 loss = total_loss
             self.scaler.scale(loss).backward()
             self.scaler.step(self.optimizer)
@@ -408,10 +395,6 @@ class ChessRES:
             turn = i
             while not done:
                 # Select best move
-                with torch.no_grad():
-                    _, value = policy_res(
-                        board_to_tensor(board=board, device=ChessRES.device)
-                    )
 
                 if turn % 2 == 0:
                     # Ruch sieci
@@ -420,13 +403,17 @@ class ChessRES:
                         neural_network=policy_res,
                         device=ChessRES.device,
                         move_search=move_search,
-                    )[0]
+                    )[0][0]
                 else:
                     # Losowy ruch
                     move = random.choice(list(board.legal_moves))
 
                 # Execute move
                 new_board, reward, done, info = env.step(move)
+                with torch.no_grad():
+                    _, value = policy_res(
+                        board_to_tensor(board=new_board, device=ChessRES.device)
+                    )
                 if verbose:
                     print(env.render())
                     print(f"Ocena pozycji (Value): {value.item():.4f}")
@@ -488,10 +475,15 @@ if __name__ == "__main__":
         device_type="cuda"
     )  # "cpu" or "cuda", cpu works better using small models
 
-    MCTS = MonteCarloTreeSearch(c_puct=1.4, num_searches=100)
+    MCTS = MonteCarloTreeSearch(
+        c_puct=1.4,
+        num_searches=100,
+        alpha=0.25,
+        epsilon=0.3,
+    )
 
     train_params = {
-        "episodes": 100,  # episodes per cycle
+        "episodes": 200,  # episodes per cycle
         "cycles": 2000,
         "epsilon": 0,
         "epsilon_decrease": (0),  # decault decay (epsilon_decrease = 1/cycles)
@@ -500,8 +492,14 @@ if __name__ == "__main__":
         "keep_training": True,
         "move_search": MCTS,
     }
-    chess_res.train(**train_params)
+    # chess_res.train(**train_params)
 
+    MCTS = MonteCarloTreeSearch(
+        c_puct=1.4,
+        num_searches=1000,
+        alpha=0,
+        epsilon=0,
+    )
     test_params = {
         "episodes": 1,
         # "file": "chess_res1.pt",

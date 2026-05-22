@@ -31,18 +31,32 @@ class MonteCarloTreeSearch:
         c_puct: float = 1.4,
         num_searches: int = 100,
         max_boards: int = 100,
+        alpha: float = 0,
+        epsilon: float = 0,
     ):
         self.c_puct = c_puct
         self.num_searches = num_searches
         self.stored_boards = [chess.Board() for _ in range(max_boards)]
+        self.alpha = alpha
+        self.epsilon = epsilon
+
+    def get_pi(self, root, num_moves):
+        pi = np.zeros(num_moves)
+        if len(root.children) == 0:
+            raise ValueError(
+                "Root node has no children (this shouldn't happen)"
+            )
+        for move, node in root.children.items():
+            pi[move_to_index(move)] = node.n
+        return pi / np.sum(pi)
 
     def _create_childs_with_noise(
         self,
         move_count: int,
         nodes: list[MCTSNode],
         initial_fens: list[str],
-        alpha: float = 0.3,
-        epsilon: float = 0.25,
+        alpha: float,
+        epsilon: float,
     ):
         with torch.no_grad():
             policy_list, _ = self.neural_network(
@@ -63,8 +77,8 @@ class MonteCarloTreeSearch:
                     )
 
                 if move_count < 30:
-                    alpha = 0.3
-                    epsilon = 0.25  # 25% random, 75% policy
+                    # alpha is distribution of noise, lower alpha -> more noise
+                    # if epsilon = 0.25  # 25% random, 75% policy
                     children = list(node.children.values())
                     noise = np.random.dirichlet([alpha] * len(children))
                     for i, child in enumerate(children):
@@ -84,7 +98,8 @@ class MonteCarloTreeSearch:
         initial_fens: list[str],
         neural_network: nn.Module,
         device: torch.device,
-    ):
+    ) -> tuple[list[chess.Move], list[np.ndarray]]:
+
         n = len(initial_fens)
         if len(self.stored_boards) < n:
             self.stored_boards += [
@@ -93,18 +108,23 @@ class MonteCarloTreeSearch:
         self.active_boards = self.stored_boards[:n]
         self.neural_network = neural_network
         self.device = device
+        searches = self.num_searches
         if move_count < 10:
-            self.num_searches //= 2
+            searches //= 2
 
         roots = [MCTSNode() for _ in range(n)]
         self._create_childs_with_noise(
-            move_count=move_count, nodes=roots, initial_fens=initial_fens
+            move_count=move_count,
+            nodes=roots,
+            initial_fens=initial_fens,
+            alpha=self.alpha,
+            epsilon=self.epsilon,
         )
 
         # print("Starting  MCTS batch search...")
 
         with torch.no_grad():
-            for _ in range(self.num_searches):
+            for _ in range(searches):
                 nodes: list[MCTSNode] = list(roots)
                 search_paths: list[list[MCTSNode]] = [[n] for n in nodes]
 
@@ -148,10 +168,12 @@ class MonteCarloTreeSearch:
                         )
 
                     self.backpropagate(search_paths[idx], value_list[idx])
-        return [
+        pi_targets_list = [self.get_pi(r, num_moves=4096) for r in roots]
+        moves = [
             max(roots[i].children.items(), key=lambda node: node[1].n)[0]
             for i in range(n)
         ]
+        return moves, pi_targets_list
 
     def backpropagate(self, path: list[MCTSNode], value: float):
         for node in reversed(path):

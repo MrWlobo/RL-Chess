@@ -172,28 +172,20 @@ def get_next_moves(
     boards: list[chess.Board],
     neural_network: nn.Module,
     device: torch.device,
-    move_count: int,
-    move_search: MonteCarloTreeSearch | None = None,
-) -> list[chess.Move]:
-    if move_search is None:
-        tensor_input = boards_to_tensor(boards=boards, device=device)
-        with torch.no_grad():
-            policy, _ = neural_network(tensor_input)
-        return [
-            get_best_legal_move(output=output, board=board)
-            for output, board in zip(policy.cpu(), boards, strict=True)
-        ]
-    print("Using MCTS")
+    move_search: MonteCarloTreeSearch,
+    move_count: int = 100,
+) -> tuple[list[chess.Move], list[np.ndarray]]:
     tic = time.time()
-    moves = move_search.batch_search(
+    moves, pi_targets_list = move_search.batch_search(
         move_count=move_count,
         initial_fens=[board.fen() for board in boards],
         neural_network=neural_network,
         device=device,
     )
     toc = time.time()
-    print(f"MCTS Time: {toc - tic}")
-    return [
+    # print(f"MCTS Time: {toc - tic}")
+    final_moves = [
         ensure_queen_promotion(move=move, board=board)
         for move, board in zip(moves, boards, strict=True)
     ]
+    return final_moves, pi_targets_list
