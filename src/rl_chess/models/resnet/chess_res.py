@@ -1,6 +1,7 @@
 import random
 import time
 from collections import defaultdict, deque
+from contextlib import nullcontext
 from pathlib import Path
 
 import chess
@@ -71,7 +72,8 @@ class ChessResNet(nn.Module):
         v = F.leaky_relu(self.value_conv(x), negative_slope=0.01)
         v = v.view(v.size(0), -1)
         v = F.leaky_relu(self.value_fc1(v), negative_slope=0.01)
-        value = torch.tanh(self.value_fc2(v))
+        # value = torch.tanh(self.value_fc2(v))
+        value = self.value_fc2(v)
 
         return policy, value
 
@@ -334,24 +336,27 @@ class ChessRES:
             .unsqueeze(1)
         )
 
-        logits, values = self.policy_res(tensor_input)
-
-        log_probs = F.log_softmax(logits, dim=1)
-        policy_loss = F.kl_div(log_probs, pi_targets, reduction="batchmean")
-        value_loss = F.mse_loss(values, value_targets)
-        if verbose:
-            print(
-                f"Policy loss: {policy_loss:.4f}, Value loss: {value_loss:.4f}"
-            )
-        # total_loss = policy_loss + value_loss
-        total_loss = policy_loss + (value_loss * 0.1)
-
         self.optimizer.zero_grad()
+        context = (
+            torch.amp.autocast("cuda")
+            if ChessRES.device.type == "cuda"
+            else nullcontext()
+        )
+
+        with context:
+            logits, values = self.policy_res(tensor_input)
+            # log_probs = F.log_softmax(logits, dim=1)
+            policy_loss = F.cross_entropy(logits, pi_targets)
+            value_loss = F.mse_loss(values, value_targets)
+            if verbose:
+                print(
+                    f"policy loss: {policy_loss:.4f}, value loss: {value_loss:.4f}, mean value: {values.mean().item():.4f}"
+                )
+            # total_loss = policy_loss + (value_loss * 0.1)
+            total_loss = policy_loss + value_loss
 
         if ChessRES.device.type == "cuda":
-            with torch.amp.autocast("cuda"):
-                loss = total_loss
-            self.scaler.scale(loss).backward()
+            self.scaler.scale(total_loss).backward()
             self.scaler.step(self.optimizer)
             self.scaler.update()
         else:
@@ -412,7 +417,7 @@ class ChessRES:
                 new_board, reward, done, info = env.step(move)
                 with torch.no_grad():
                     _, value = policy_res(
-                        board_to_tensor(board=new_board, device=ChessRES.device)
+                        board_to_tensor(board=board, device=ChessRES.device)
                     )
                 if verbose:
                     print(env.render())
@@ -487,7 +492,7 @@ if __name__ == "__main__":
         "cycles": 2000,
         "epsilon": 0,
         "epsilon_decrease": (0),  # decault decay (epsilon_decrease = 1/cycles)
-        "file": "chess_res2.pt",
+        "file": "chess_res3.pt",
         "verbose": True,
         "keep_training": True,
         "move_search": MCTS,
