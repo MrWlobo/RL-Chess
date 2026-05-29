@@ -33,22 +33,37 @@ class MonteCarloTreeSearch:
         max_boards: int = 100,
         alpha: float = 0,
         epsilon: float = 0,
+        training_mode: bool = False,
     ):
         self.c_puct = c_puct
         self.num_searches = num_searches
         self.stored_boards = [chess.Board() for _ in range(max_boards)]
         self.alpha = alpha
         self.epsilon = epsilon
+        self.training_mode = training_mode
 
-    def get_pi(self, root, num_moves):
-        pi = np.zeros(num_moves)
+    def get_pi(self, root, num_moves, temperature=0.01):
+        visits = np.array([node.n for node in root.children.values()])
+        moves = list(root.children.keys())
+
         if len(root.children) == 0:
-            raise ValueError(
-                "Root node has no children (this shouldn't happen)"
-            )
-        for move, node in root.children.items():
-            pi[move_to_index(move)] = node.n
-        return pi / np.sum(pi)
+            raise ValueError("Root node has no children")
+
+        if temperature <= 1e-3:
+            pi = np.zeros(num_moves)
+            best_move = max(root.children.items(), key=lambda x: x[1].n)[0]
+            pi[move_to_index(best_move)] = 1.0
+            return pi
+
+        logits = np.log(visits + 1e-8) / temperature
+        probs = np.exp(logits - np.max(logits))
+        probs /= np.sum(probs)
+
+        pi = np.zeros(num_moves)
+        indices = [move_to_index(m) for m in moves]
+        pi[indices] = probs
+
+        return pi
 
     def _create_childs_with_noise(
         self,
@@ -76,7 +91,7 @@ class MonteCarloTreeSearch:
                         parent=node, prior_p=probs[i]
                     )
 
-                if move_count < 30:
+                if self.training_mode:
                     # alpha is distribution of noise, lower alpha -> more noise
                     # if epsilon = 0.25  # 25% random, 75% policy
                     children = list(node.children.values())
@@ -109,8 +124,6 @@ class MonteCarloTreeSearch:
         self.neural_network = neural_network
         self.device = device
         searches = self.num_searches
-        if move_count < 10:
-            searches //= 2
 
         roots = [MCTSNode() for _ in range(n)]
         self._create_childs_with_noise(
@@ -143,8 +156,8 @@ class MonteCarloTreeSearch:
                         boards=self.active_boards, device=self.device
                     )
                 )
-                policy_list = [p.cpu().numpy() for p in policy_list]
-                value_list = [np.clip(v.item(), -1, 1) for v in value_list]
+                policy_tensor = policy_list.cpu().numpy()
+                value_list = value_list.cpu().numpy()
 
                 for idx, node in enumerate(nodes):
                     board = self.active_boards[idx]
@@ -158,7 +171,7 @@ class MonteCarloTreeSearch:
 
                     legal_moves = list(board.legal_moves)
                     move_indices = [move_to_index(move) for move in legal_moves]
-                    logits = policy_list[idx][move_indices]
+                    logits = policy_tensor[idx, move_indices]
 
                     move_probs = self._normalize_logits(logits)
 
@@ -168,11 +181,27 @@ class MonteCarloTreeSearch:
                         )
 
                     self.backpropagate(search_paths[idx], value_list[idx])
-        pi_targets_list = [self.get_pi(r, num_moves=4096) for r in roots]
-        moves = [
-            max(roots[i].children.items(), key=lambda node: node[1].n)[0]
-            for i in range(n)
+        temp = 1.0 if self.training_mode else 0.01
+
+        pi_targets_list = [
+            self.get_pi(root=r, num_moves=4096, temperature=temp) for r in roots
         ]
+        moves = []
+        for i in range(n):
+            children = list(roots[i].children.items())
+            visits = np.array([node.n for move, node in children])
+            if self.training_mode and move_count < 20:
+                logits = np.log(visits + 1e-8) / 1.0
+                probs = np.exp(logits - np.max(logits))
+                probs /= np.sum(probs)
+
+                chosen_move = np.random.choice(
+                    [c[0] for c in children], p=probs
+                )
+            else:
+                best_idx = np.argmax(visits)
+                chosen_move = children[best_idx][0]
+            moves.append(chosen_move)
         return moves, pi_targets_list
 
     def backpropagate(self, path: list[MCTSNode], value: float):

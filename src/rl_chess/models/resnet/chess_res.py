@@ -37,7 +37,7 @@ class ResBlock(nn.Module):
 
 
 class ChessResNet(nn.Module):
-    def __init__(self, num_res_blocks=10, channels=128):
+    def __init__(self, num_res_blocks=10, channels=256):
         super().__init__()
         # Warstwa wejściowa
         self.start_conv = nn.Conv2d(17, channels, kernel_size=3, padding=1)
@@ -72,8 +72,8 @@ class ChessResNet(nn.Module):
         v = F.leaky_relu(self.value_conv(x), negative_slope=0.01)
         v = v.view(v.size(0), -1)
         v = F.leaky_relu(self.value_fc1(v), negative_slope=0.01)
-        # value = torch.tanh(self.value_fc2(v))
-        value = self.value_fc2(v)
+        value = torch.tanh(self.value_fc2(v))
+        # value = self.value_fc2(v)
 
         return policy, value
 
@@ -159,7 +159,7 @@ class ChessRES:
         )
 
     def _simulate_games(
-        self, memory: ReplayMemory, episodes: int, max_moves: int = 150
+        self, memory: ReplayMemory, episodes: int, max_moves: int = 80
     ):
         active_boards = {i: chess.Board() for i in range(episodes)}
         move_count = 0
@@ -193,7 +193,8 @@ class ChessRES:
                 temp_memory[i].append([board.fen(), pi_targets])
                 if board.is_game_over():
                     if board.is_checkmate():
-                        outcomes[i] = 1.0
+                        winner = not board.turn
+                        outcomes[i] = 1.0 if winner == chess.WHITE else -1.0
                     else:
                         outcomes[i] = 0.0
                     finished_games.append(i)
@@ -201,12 +202,27 @@ class ChessRES:
                 del active_boards[i]
             move_count += 1
         print()
+        num_checkmates = 0
+        num_draws = 0
+        skipped_obs = 0
         for i in range(episodes):
             outcome = outcomes[i]
+
             for obs in reversed(temp_memory[i]):
+                if abs(outcome) < 0.1:
+                    if num_draws < num_checkmates / 2:
+                        num_draws += 1
+                    else:
+                        skipped_obs += 1
+                        break
+                else:
+                    num_checkmates += 1
                 fen, pi_targets = obs
                 memory.append((fen, pi_targets, outcome))
                 outcome *= -1
+        print(
+            f"Added: Checkmates: {num_checkmates}, Draws: {num_draws}, Skipped observations: {skipped_obs}"
+        )
         return outcomes
 
     def train(
@@ -294,6 +310,8 @@ class ChessRES:
                     batch = memory.sample(self.mini_batch_size)
                     moves_optimized += len(batch)
                     self.optimize(batch, verbose=(i % 20 == 0) and self.verbose)
+                if len(memory) < i * self.mini_batch_size:
+                    break
 
             # Decay epsilon
             self.epsilon = max(self.epsilon - self.epsilon_decrease, 0.00)
@@ -482,33 +500,35 @@ if __name__ == "__main__":
 
     MCTS = MonteCarloTreeSearch(
         c_puct=1.4,
-        num_searches=100,
+        num_searches=150,
         alpha=0.25,
         epsilon=0.3,
+        training_mode=True,
     )
 
     train_params = {
-        "episodes": 200,  # episodes per cycle
+        "episodes": 300,  # episodes per cycle
         "cycles": 2000,
         "epsilon": 0,
         "epsilon_decrease": (0),  # decault decay (epsilon_decrease = 1/cycles)
-        "file": "chess_res3.pt",
+        "file": "chess_res6.pt",
         "verbose": True,
         "keep_training": True,
         "move_search": MCTS,
     }
-    # chess_res.train(**train_params)
+    chess_res.train(**train_params)
 
     MCTS = MonteCarloTreeSearch(
         c_puct=1.4,
         num_searches=1000,
         alpha=0,
         epsilon=0,
+        training_mode=False,
     )
     test_params = {
         "episodes": 1,
         # "file": "chess_res1.pt",
-        "file": "chess_res2_0.pt",
+        "file": "chess_res6_0.pt",
         "verbose": True,
         "move_search": MCTS,
     }

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 from concurrent.futures import ProcessPoolExecutor
 from typing import TYPE_CHECKING
 
@@ -175,15 +174,13 @@ def get_next_moves(
     move_search: MonteCarloTreeSearch,
     move_count: int = 100,
 ) -> tuple[list[chess.Move], list[np.ndarray]]:
-    tic = time.time()
+
     moves, pi_targets_list = move_search.batch_search(
         move_count=move_count,
         initial_fens=[board.fen() for board in boards],
         neural_network=neural_network,
         device=device,
     )
-    toc = time.time()
-    # print(f"MCTS Time: {toc - tic}")
     final_moves = [
         ensure_queen_promotion(move=move, board=board)
         for move, board in zip(moves, boards, strict=True)
