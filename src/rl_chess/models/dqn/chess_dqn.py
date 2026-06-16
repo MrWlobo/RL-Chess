@@ -249,6 +249,8 @@ class ChessDQN:
     loss_fn = nn.SmoothL1Loss()  # NN Loss function. MSE=Mean Squared Error can be swapped to something else.
     optimizer = None  # NN Optimizer. Initialize later.
 
+    device = torch.device("cpu")
+
     def __init__(self, device_type="cpu"):
         if device_type in ["cuda", "cpu"]:
             ChessDQN.device = torch.device(device_type)

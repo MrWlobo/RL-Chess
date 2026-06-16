@@ -21,6 +21,8 @@ def main():
 
         board, reward, done, info = env.step(action)
 
+        # env.render()
+
         # tensor = board_to_tensor(board)
         if reward > 0:
             print(reward)
