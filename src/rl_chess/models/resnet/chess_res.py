@@ -13,15 +13,15 @@ import torch.nn.functional as F
 from torch import nn
 
 from rl_chess.utils.MonteCarloTreeSearch import MonteCarloTreeSearch
+from rl_chess.utils.parse_pgn_files import (
+    fetch_games_from_file,
+    fetch_moves_from_game,
+)
 from rl_chess.utils.train_utils import (
     board_to_tensor,
     boards_to_tensor,
     get_next_moves,
     move_to_index,
-)
-from src.rl_chess.utils.parse_pgn_files import (
-    fetch_games_from_file,
-    fetch_moves_from_game,
 )
 
 
@@ -42,7 +42,7 @@ class ResBlock(nn.Module):
 
 
 class ChessResNet(nn.Module):
-    def __init__(self, num_res_blocks=10, channels=256):
+    def __init__(self, num_res_blocks=25, channels=256):
         super().__init__()
         # Warstwa wejściowa
         self.start_conv = nn.Conv2d(17, channels, kernel_size=3, padding=1)
@@ -144,7 +144,7 @@ class ChessRES:
     mini_batch_size = (
         256  # size of the training data set sampled from the replay memory
     )
-    batches_per_cycle = 120  # number of batches to train on per cycle
+    batches_per_cycle = 10  # number of batches to train on per cycle
 
     # Neural Network
     loss_fn = nn.SmoothL1Loss()  # NN Loss function. MSE=Mean Squared Error can be swapped to something else.
@@ -164,7 +164,7 @@ class ChessRES:
         )
 
     def _simulate_games(
-        self, memory: ReplayMemory, episodes: int, max_moves: int = 80
+        self, memory: ReplayMemory, episodes: int, max_moves: int = 150
     ):
         active_boards = {i: chess.Board() for i in range(episodes)}
         move_count = 0
@@ -208,25 +208,31 @@ class ChessRES:
             move_count += 1
         print()
         num_checkmates = 0
-        num_draws = 0
-        skipped_obs = 0
+        all_obs = 0
         for i in range(episodes):
             outcome = outcomes[i]
-
+            all_obs += len(temp_memory[i])
             for obs in reversed(temp_memory[i]):
                 if outcome == 0:
-                    if num_draws < num_checkmates * 1.5:
-                        num_draws += 1
-                    else:
-                        skipped_obs += 1
-                        continue
-                else:
-                    num_checkmates += 1
+                    break
+                num_checkmates += 1
                 fen, pi_targets = obs
                 memory.append((fen, pi_targets, outcome))
                 outcome *= -1
+
+        draws = []
+        for i in range(episodes):
+            for obs in reversed(temp_memory[i]):
+                if outcome == 0:
+                    draws.append(obs)
+        num_draws = min(len(draws), num_checkmates)
+        draw_obs = random.sample(draws, num_draws)
+        for obs in draw_obs:
+            fen, pi_targets = obs
+            memory.append((fen, pi_targets, 0))
+
         print(
-            f"Added: Checkmates: {num_checkmates}, Draws: {num_draws}, Skipped observations: {skipped_obs}"
+            f"Added: Checkmates: {num_checkmates}, Draws: {num_draws}, Skipped observations: {all_obs}, added {(num_checkmates + num_draws) / all_obs:.1f}%"
         )
         return outcomes
 
@@ -297,7 +303,6 @@ class ChessRES:
         )
 
         for cycle in range(start_cycle, cycles):
-            self.move_search.num_searches = cycle // 10 + 2
             if verbose:
                 print(f"cycle {cycle}")
                 print(f"Simulating {episodes} games...")
@@ -329,7 +334,7 @@ class ChessRES:
             # Copy policy network to target network
             self.target_res.load_state_dict(self.policy_res.state_dict())
             current_file = (
-                file[: file.find(".")] + "_" + str(cycle // 10) + ".pt"
+                file[: file.find(".")] + "_" + str(cycle // 5) + ".pt"
             )
             trained_dir = Path(__file__).parent.resolve() / "trained"
             trained_dir.mkdir(parents=True, exist_ok=True)
@@ -399,103 +404,102 @@ class ChessRES:
             epochs (int): How many epochs to train
             file (str): Name of the file to save the model
         """
-        memory = ReplayMemory()
         skipped_games = 0
         processed_games = 0
+        game_batch_size = 5
 
         base_dir = Path(__file__).resolve().parents[2]
         pgn_path = base_dir / "read_pgn" / "database.pgn"
 
-        print("Fetching games")
-
-        games_list = fetch_games_from_file(str(pgn_path))
-
-        print(f"Przetwarzanie {len(games_list)} gier do pamięci podręcznej...")
-
-        for game in games_list:
-            board = chess.Board()
-            temp_game_states = []
-            invalid_promotion = False
-            game_moves = fetch_moves_from_game(game)
-
-            for move in game_moves:
-                if move.promotion and move.promotion != chess.QUEEN:
-                    invalid_promotion = True
-                    break
-
-                if move in board.legal_moves:
-                    pi_target = np.zeros(4096)
-                    pi_target[move_to_index(move)] = 1
-
-                    temp_game_states.append([board.fen(), pi_target])
-                    board.push(move)
-                else:
-                    print(f"Invalid move: {move}")
-                    invalid_promotion = True
-                    break
-
-            if invalid_promotion:
-                skipped_games += 1
-                continue
-
-            if board.is_checkmate():
-                winner = not board.turn
-                outcome = 1.0 if winner == chess.WHITE else -1.0
-            else:
-                res = board.result()
-                if res == "1-0":
-                    outcome = 1.0
-                elif res == "0-1":
-                    outcome = -1.0
-                else:
-                    outcome = 0.0
-
-            for obs in reversed(temp_game_states):
-                fen, pi_targets = obs
-                memory.append((fen, pi_targets, outcome))
-                outcome *= -1
-
-            processed_games += 1
-
-        print(
-            f"Przetworzono pomyślnie gier: {processed_games}, Pominięto (promocje/błędy): {skipped_games}"
-        )
-        print(f"Rozmiar pamięci po załadowaniu gier: {len(memory)}")
-
-        if len(memory) == 0:
-            print("Brak danych do uczenia. Przerywam.")
-            return
-
         self.policy_res = ChessResNet().to(ChessRES.device)
 
-        file_path = Path(__file__).parent.resolve() / "trained" / file
         self.policy_res.train()
         self.optimizer = torch.optim.Adam(
             self.policy_res.parameters(), lr=self.learning_rate_a
         )
 
-        print("Rozpoczynam optymalizację sieci na zebranych stanach...")
+        print("Fetching games")
 
-        for epoch in range(epochs):
-            tic = time.time()
-            # Wyznaczamy liczbę batche na tę epokę
-            num_batches = len(memory) // self.mini_batch_size
-            if num_batches == 0:
-                num_batches = 1
+        game_list = fetch_games_from_file(str(pgn_path))
 
-            epoch_loss = 0.0
-            for _ in range(num_batches):
-                batch = memory.sample(min(self.mini_batch_size, len(memory)))
-                loss_val = self.optimize(batch)
-                epoch_loss += loss_val
+        print(f"Processing {len(game_list)} games to memory...")
+        tic = time.time()
+        chosen_game_list_loss = 0.0
+        processed_moves = 0
 
-            toc = time.time()
-            print(
-                f"Epoka {epoch + 1}/{epochs} zakończona w {toc - tic:.2f}s. Średni loss: {epoch_loss / num_batches:.4f}"
+        for batch_num in range(epochs * len(game_list) // game_batch_size):
+            chosen_indices = np.random.choice(
+                len(game_list), game_batch_size, replace=False
             )
+            chosen_game_list = [game_list[i] for i in chosen_indices]
+            batch = []
 
-        torch.save(self.policy_res.state_dict(), file_path)
-        print(f"Model zapisany w: {file_path}")
+            moves_optimized = 0
+            for game in chosen_game_list:
+                board = chess.Board()
+                temp_game_states = []
+                invalid_promotion = False
+                game_moves = fetch_moves_from_game(game)
+
+                for move in game_moves:
+                    if move.promotion and move.promotion != chess.QUEEN:
+                        invalid_promotion = True
+                        break
+
+                    if move in board.legal_moves:
+                        pi_target = np.zeros(4096)
+                        pi_target[move_to_index(move)] = 1
+
+                        temp_game_states.append([board.fen(), pi_target])
+                        board.push(move)
+                        moves_optimized += 1
+                    else:
+                        print(f"Invalid move: {move}")
+                        invalid_promotion = True
+                        break
+
+                if invalid_promotion:
+                    skipped_games += 1
+                    continue
+
+                if board.is_checkmate():
+                    winner = not board.turn
+                    outcome = 1.0 if winner == chess.WHITE else -1.0
+                else:
+                    res = board.result()
+                    if res == "1-0":
+                        outcome = 1.0
+                    elif res == "0-1":
+                        outcome = -1.0
+                    else:
+                        outcome = 0.0
+
+                for obs in reversed(temp_game_states):
+                    fen, pi_targets = obs
+                    batch.append((fen, pi_targets, outcome))
+                    outcome *= -1
+
+                processed_games += 1
+
+            loss_val = self.optimize(batch)
+            chosen_game_list_loss += loss_val
+            processed_moves += 1
+
+            if batch_num % 100 == 0:
+                toc = time.time()
+                file_path = (
+                    Path(__file__).parent.resolve()
+                    / "trained"
+                    / (file[:-3] + f"{batch_num // 100}.pt")
+                )
+                torch.save(self.policy_res.state_dict(), file_path)
+                moves_optimized = max(1, moves_optimized)
+                print(
+                    f"batch {batch_num // 100}, moves {moves_optimized}, time {toc - tic:.2f}, time per move {(toc - tic) / moves_optimized:.2f}, skipped {skipped_games}, processed {processed_games}, avg_loss: {chosen_game_list_loss / processed_moves:.4f}"
+                )
+                tic = time.time()
+                chosen_game_list_loss = 0.0
+                processed_moves = 0
 
     # Run the Chess environment with the learned policy
     def test(
@@ -613,33 +617,33 @@ if __name__ == "__main__":
         device_type="cuda"
     )  # "cpu" or "cuda", cpu works better using small models
 
-    chess_res.train_from_pgndata(epochs=1)
+    # chess_res.train_from_pgndata(epochs=5)
 
     MCTS = MonteCarloTreeSearch(
-        c_puct=1.4,
-        num_searches=1,
+        c_puct=3.0,
+        num_searches=50,
         alpha=0.25,
-        epsilon=0.3,
+        epsilon=0.25,
         training_mode=True,
     )
 
     train_params = {
-        "episodes": 1000,  # episodes per cycle
+        "episodes": 100,  # episodes per cycle
         "cycles": 1000,
-        "epsilon": 0,
-        "epsilon_decrease": (0),  # decault decay (epsilon_decrease = 1/cycles)
-        "file": "chess_res7.pt",
-        "input_file": "chess_res7_14.pt",
-        "start_cycle": 145,
+        "epsilon": 1,
+        # "epsilon_decrease": (0),  # decault decay (epsilon_decrease = 1/cycles)
+        "file": "chess_res_finetuned.pt",
+        "input_file": "chess_res_pretrained468.pt",
+        # "start_cycle": 145,
         "verbose": True,
         "keep_training": True,
         "move_search": MCTS,
     }
-    chess_res.train(**train_params)
+    # chess_res.train(**train_params)
 
     MCTS = MonteCarloTreeSearch(
-        c_puct=1.4,
-        num_searches=1000,
+        c_puct=1.0,
+        num_searches=50,
         alpha=0,
         epsilon=0,
         training_mode=False,
@@ -647,7 +651,7 @@ if __name__ == "__main__":
     test_params = {
         "episodes": 1,
         # "file": "chess_res1.pt",
-        "file": "chess_res7_14.pt",
+        "file": "chess_res_finetuned_8.pt",
         "verbose": True,
         "move_search": MCTS,
     }

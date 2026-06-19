@@ -4,10 +4,12 @@ import chess
 import pygame
 import torch
 
-from rl_chess.models.dqn.chess_dqn import (
-    ChessCNN,
-    board_to_tensor,
+from src.rl_chess.models.resnet.chess_res import ChessResNet
+from src.rl_chess.utils.MonteCarloTreeSearch import MonteCarloTreeSearch
+from src.rl_chess.utils.train_utils import (
+    boards_to_tensor,
     get_best_legal_move,
+    get_next_moves,
 )
 
 # Ustawienia
@@ -99,15 +101,35 @@ def draw_board(
         screen.blit(piece_images[moving_piece["key"]], anim_pos)
 
 
+def choose_move(board, model):
+    use_mcts = False
+    if use_mcts:
+        MCTS = MonteCarloTreeSearch(num_searches=150)
+        return get_next_moves(
+            boards=[board],
+            neural_network=model,
+            device=torch.device("cpu"),
+            move_search=MCTS,
+        )[0][0]
+    output = model(boards_to_tensor([board], torch.device("cpu")))
+    return get_best_legal_move(output[0], board)
+
+
 def play_gui():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Play against model")
     piece_images = load_piece_images()
     board = chess.Board()
-    model = ChessCNN()
+    model = ChessResNet()
 
-    model_path = Path("src/rl_chess/models/dqn/trained/chess_dqn1.pt")
+    # only pretrained: chess_res_pretrained292.pt
+
+    model_path = Path(
+        # "src/rl_chess/models/resnet/trained/chess_res_pretrained186.pt"
+        # "src/rl_chess/models/resnet/trained/chess_res_finetuned_8.pt"
+        "src/rl_chess/models/resnet/trained/chess_res_pretrained468.pt"
+    )
     if model_path.exists():
         model.load_state_dict(
             torch.load(
@@ -163,10 +185,7 @@ def play_gui():
                         board.push(move)
                         if not board.is_game_over():
                             with torch.no_grad():
-                                output = model(
-                                    board_to_tensor(board).unsqueeze(0)
-                                )
-                                ai_move = get_best_legal_move(output[0], board)
+                                ai_move = choose_move(board, model)
                                 if ai_move:
                                     is_pawn = (
                                         board.piece_at(

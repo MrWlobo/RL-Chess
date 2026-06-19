@@ -1,5 +1,7 @@
-from rl_chess.agents.custom.dqn_agent import DQNAgent
+from rl_chess.agents.custom.resnet_agent import ResNetAgent
+from rl_chess.agents.custom.resnet_agent_mcts import ResNetMCTSAgent
 
 AGENT_REGISTRY = {
-    "DQNAgent": DQNAgent,
+    "ResNetAgent": ResNetAgent,
+    "ResNetMCTSAgent": ResNetMCTSAgent,
 }

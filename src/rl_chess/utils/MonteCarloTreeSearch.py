@@ -5,6 +5,7 @@ from torch import nn
 
 from rl_chess.utils.train_utils import (
     boards_to_tensor,
+    index_to_move,
     move_to_index,
 )
 
@@ -64,6 +65,15 @@ class MonteCarloTreeSearch:
         pi[indices] = probs
 
         return pi
+
+    def sample_from_pi(self, pi):
+        pi = np.asarray(pi, dtype=np.float64)
+        s = pi.sum()
+        if s <= 0:
+            raise ValueError("pi sum is zero")
+        pi = pi / s
+        index = np.random.choice(len(pi), p=pi)
+        return index_to_move(index)
 
     def _create_childs_with_noise(
         self,
@@ -181,26 +191,22 @@ class MonteCarloTreeSearch:
                         )
 
                     self.backpropagate(search_paths[idx], value_list[idx])
-        temp = 1.0 if self.training_mode else 0.01
+
+        temperature = 1.0 if self.training_mode and move_count < 30 else 0.0
 
         pi_targets_list = [
-            self.get_pi(root=r, num_moves=4096, temperature=temp) for r in roots
+            self.get_pi(root=r, num_moves=4096, temperature=temperature)
+            for r in roots
         ]
         moves = []
         for i in range(n):
-            children = list(roots[i].children.items())
-            visits = np.array([node.n for move, node in children])
-            if self.training_mode and move_count < 20:
-                logits = np.log(visits + 1e-8) / 1.0
-                probs = np.exp(logits - np.max(logits))
-                probs /= np.sum(probs)
-
-                chosen_move = np.random.choice(
-                    [c[0] for c in children], p=probs
-                )
+            if temperature > 0:
+                chosen_move = self.sample_from_pi(pi_targets_list[i])
             else:
-                best_idx = np.argmax(visits)
-                chosen_move = children[best_idx][0]
+                chosen_move = max(
+                    roots[i].children.items(), key=lambda x: x[1].n
+                )[0]
+
             moves.append(chosen_move)
         return moves, pi_targets_list
 

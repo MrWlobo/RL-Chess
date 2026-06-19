@@ -167,6 +167,18 @@ def move_to_index(move: chess.Move) -> int:
     return (move.from_square * 64) + move.to_square
 
 
+def index_to_move(index: int) -> chess.Move:
+    move_from_idx = index // 64
+    move_to_idx = index % 64
+
+    # chess.square_name(0) -> "a1", chess.square_name(63) -> "h8"
+    from_square = chess.square_name(move_from_idx)
+    to_square = chess.square_name(move_to_idx)
+    if from_square == to_square:
+        return None
+    return chess.Move.from_uci(from_square + to_square)
+
+
 def get_next_moves(
     boards: list[chess.Board],
     neural_network: nn.Module,

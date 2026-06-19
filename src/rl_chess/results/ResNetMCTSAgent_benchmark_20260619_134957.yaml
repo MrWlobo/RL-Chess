@@ -1,0 +1,517 @@
+RandomAgent:
+  wins: 1
+  losses: 0
+  draws: 9
+Maia1100:
+  wins: 0
+  losses: 0
+  draws: 0
+Maia1400:
+  wins: 0
+  losses: 0
+  draws: 0
+Maia1600:
+  wins: 0
+  losses: 0
+  draws: 0
+Maia1900:
+  wins: 0
+  losses: 0
+  draws: 0
+games:
+  RandomAgent:
+  - '[Event "?"]
+
+    [Site "?"]
+
+    [Date "????.??.??"]
+
+    [Round "?"]
+
+    [White "ResNetMCTSAgent"]
+
+    [Black "RandomAgent"]
+
+    [Result "1/2-1/2"]
+
+    [FEN "rn1qkbnr/ppp1pppp/8/3p1b2/2P5/1P6/P2PPPPP/RNBQKBNR w KQkq - 0 3"]
+
+    [SetUp "1"]
+
+    [Termination "Draw by Insufficient Material"]
+
+    [Variant "From Position"]
+
+
+    3. h3 Be6 4. f4 Nc6 5. Rh2 Bd7 6. Nf3 Nh6 7. a3 Ng4 8. Ng5 g6 9. d3 Be6 10. g3
+    Bd7 11. Nxh7 Nf6 12. Ng5 Rg8 13. e3 Na5 14. Ne6 b6 15. a4 Bb5 16. Nxf8 Rxf8 17.
+    axb5 Rb8 18. e4 Nb7 19. Rg2 Rc8 20. exd5 Nc5 21. d6 Nb7 22. h4 Nd7 23. dxc7 Na5
+    24. Rh2 Nb8 25. cxd8=Q+ Kxd8 26. c5 Rc7 27. c6 Rh8 28. Raa2 Rc8 29. c7+ Kxc7 30.
+    Kf2 Rcg8 31. Ra1 Nxb3 32. Be2 Nxa1 33. Bb2 Kd6 34. d4 Rd8 35. Qc2 Nc6 36. Kf3
+    Rhf8 37. Bc1 a5 38. Bd3 Rd7 39. Rh3 Ra8 40. bxc6 Rc8 41. Be4 Rh8 42. c7 Rhd8 43.
+    Ke2 b5 44. Ke3 Ra8 45. Qc3 Rg8 46. Bd5 f5 47. g4 e5 48. Qc4 Re7 49. dxe5+ Kd7
+    50. Be4 Rd8 51. Qxb5+ Kxc7 52. h5 Rd2 53. Bd5 Rc2 54. Be4 Nb3 55. Qc4+ Kb8 56.
+    Qc5 Rd2 57. Nc3 Nd4 58. Bd5 gxh5 59. e6 Nb5 60. Be4 Rg2 61. Bd5 Na7 62. Be4 Rd2
+    63. Qc4 hxg4 64. Qd3 Kc7 65. Bxf5 Kb6 66. Bxg4 Rc7 67. f5 Re2+ 68. Kf3 Rc5 69.
+    Be3 Nc8 70. Kf4 Kb7 71. Rh4 Rxc3 72. Ke5 Kc6 73. Bf3+ Kc7 74. Kf6 Rf2 75. Kf7
+    Rb2 76. Rh5 Rd2 77. Bf4+ Kb6 78. Qc2 Rdd3 79. f6 Rd5 80. Bg4 Rcc5 81. Bg3 Rb5
+    82. Rh6 Rdc5 83. Rh7 Kb7 84. Rh6 a4 85. Rh7 Rb2 86. Qc3 Rc7+ 87. e7 Nxe7 88. Ke8
+    Kb8 89. Rh8 Ka8 90. Rh7 Rb6 91. Qc4 Nf5 92. Bf2 Kb7 93. Kd8 Rb1 94. Qc5 Re7 95.
+    f7 Rb6 96. Bf3+ Ka6 97. Qc4+ Rb5 98. Qc5 Rb3 99. Qc4+ Ka5 100. Be1+ Rb4 101. Qxb4+
+    Ka6 102. f8=Q Rf7 103. Be2+ Ka7 104. Ke8 Rxh7 105. Qc3 Rh2 106. Qc4 Ka8 107. Qxf5
+    Rh5 108. Kf8 Rh3 109. Ke8 Rh8+ 110. Kd7 Rf8 111. Qc3 Rg8 112. Qff6 Rg4 113. Bf2
+    Rh4 114. Qf5 Rh3 115. Qf4 Rh1 116. Kd6 Re1 117. Qf5 Kb8 118. Kd5 Kb7 119. Bxe1
+    Ka7 120. Kd6 Kb6 121. Bf2+ Kb7 122. Qff6 Kb8 123. Qg5 Kb7 124. Qh6 a3 125. Bd1
+    Ka6 126. Bg1 Kb7 127. Qc4 Ka8 128. Qh5 Kb7 129. Qhh4 a2 130. Qh3 a1=Q 131. Qhf1
+    Qa3+ 132. Qc5 Kb8 133. Qg2 Qc1 134. Qg3 Qh6+ 135. Kd7+ Kb7 136. Qc6+ Qxc6+ 137.
+    Kd8 Qg6 138. Ke7 Qg8 139. Qg4 Qg6 140. Kf8 Qa6 141. Ke8 Qe6+ 142. Kd8 Qh6 143.
+    Kd7 Ka8 144. Qg5 Qg6 145. Qg4 Qxg4+ 146. Kd8 Qxg1 147. Ke8 Qb6 148. Kf8 Qe6 149.
+    Bc2 Qf5+ 150. Kg7 Qg5+ 151. Kf8 Qg4 152. Ke8 Qh4 153. Bd3 Qh5+ 154. Kd8 Qd1 155.
+    Kc7 Qc2+ 156. Kd8 Qf2 157. Be4+ Ka7 158. Bd5 Qc2 159. Be6 Kb8 160. Ke7 Qc1 161.
+    Bf7 Kc8 162. Bg8 Qc7+ 163. Ke8 Qb8 164. Kf8 Qa7 165. Ke8 Qc5 166. Kf7 Kb8 167.
+    Bh7 Ka8 168. Kf6 Qc1 169. Bg8 Qa3 170. Kf7 Qe7+ 171. Kxe7 1/2-1/2'
+  - '[Event "?"]
+
+    [Site "?"]
+
+    [Date "????.??.??"]
+
+    [Round "?"]
+
+    [White "RandomAgent"]
+
+    [Black "ResNetMCTSAgent"]
+
+    [Result "1/2-1/2"]
+
+    [FEN "rn1qkbnr/ppp1pppp/8/3p1b2/2P5/1P6/P2PPPPP/RNBQKBNR w KQkq - 0 3"]
+
+    [SetUp "1"]
+
+    [Termination "Draw by Stalemate"]
+
+    [Variant "From Position"]
+
+
+    3. Na3 Nh6 4. c5 a6 5. h4 Nc6 6. e3 Rg8 7. Rh3 b6 8. h5 Rh8 9. d4 Rg8 10. Ne2
+    Rh8 11. e4 Rg8 12. Rb1 Rh8 13. Bb2 Rg8 14. exd5 Rh8 15. Rh1 Rg8 16. Ng3 Rh8 17.
+    Bb5 Rg8 18. Ba1 Qd7 19. Rh3 Rb8 20. Qc2 Ra8 21. Rh2 g6 22. Qc4 Kd8 23. Qc2 axb5
+    24. Nc4 f6 25. Ke2 bxc4 26. Rf1 Nxd4+ 27. Kd2 Kc8 28. Rb1 Kd8 29. Kc1 Kc8 30.
+    Qe2 Kb7 31. Qd1 b5 32. Qg4 Qd6 33. f4 e6 34. Bxd4 Rg7 35. Qxg6 Qxc5 36. Nf1 Qc6
+    37. Rh4 exd5 38. g3 Rxg6 39. Bxf6 Qc5 40. a3 Kc8 41. Kd1 cxb3 42. Bh8 Qc4 43.
+    Rc1 Be7 44. Bf6 Rb8 45. Nh2 c6 46. Bxe7 b2 47. Rc3 c5 48. Rg4 Rg5 49. Rb3 b4 50.
+    Rf3 Bxg4 51. a4 b1=Q+ 52. Kd2 d4 53. Rd3 Qb2+ 54. Ke1 Qd5 55. Re3 d3 56. Bf6 c4
+    57. Nxg4 Qe4 58. Be7 Qd5 59. a5 d2+ 60. Kf1 Qe4 61. Rc3 Kc7 62. Rc1 Ra8 63. Rc3
+    Rc8 64. Bxb4 Qe5 65. Be7 Qd4 66. Nh2 Qe5 67. Bf8 Rg4 68. Rd3 Rxg3 69. Bxh6 Qb1+
+    70. Kf2 Qxf4+ 71. Nf3 c3 72. Rd4 Rg4 73. Bg7 Qff5 74. Re4 Qfxe4 75. Nxd2 Rf4+
+    76. Kg3 Rf5 77. a6 Rb8 78. Be5+ Kc6 79. Bd4 Rb7 80. h6 cxd2 81. Bf2 Rb6 82. a7
+    Rbb5 83. Bg1 Rb6 84. a8=R Kd7 85. Rc8 Kd6 86. Rh8 Qe3+ 87. Kh2 Qa1 88. Rf8 Qb1
+    89. Rh8 Rbb5 90. Ra8 Kd5 91. Kg2 d1=Q 92. Ra1 Rf4 93. Bh2 Qxa1 94. Bxf4 Rb6 95.
+    Kh2 Rb7 96. Bg5 Qde1 97. Bxe3 Qe2+ 98. Kh3 Qxe3+ 99. Kg4 Rb6 100. Kh4 Ke4 101.
+    Kh5 Qb1 102. Kh4 Rb5 103. Kg4 Ra5 104. Kh4 Qa1 105. Kg4 Ra4 106. Kh5 Ra5+ 107.
+    Kg4 Ra4 108. Kh5 Kd5 1/2-1/2'
+  - '[Event "?"]
+
+    [Site "?"]
+
+    [Date "????.??.??"]
+
+    [Round "?"]
+
+    [White "ResNetMCTSAgent"]
+
+    [Black "RandomAgent"]
+
+    [Result "1/2-1/2"]
+
+    [FEN "rnbqkbnr/1p1ppppp/p1p5/8/8/4PQ2/PPPP1PPP/RNB1KBNR w KQkq - 0 3"]
+
+    [SetUp "1"]
+
+    [Termination "Draw by Stalemate"]
+
+    [Variant "From Position"]
+
+
+    3. Qxf7+ Kxf7 4. Nh3 Nf6 5. b4 g6 6. g4 d6 7. d3 c5 8. bxc5 Be6 9. cxd6 Nbd7 10.
+    dxe7 Rg8 11. Ng5+ Kg7 12. Bb2 Bb3 13. Nxh7 Be6 14. Nxf8 Qxf8 15. exf8=Q+ Nxf8
+    16. g5 b5 17. h3 Bf7 18. f3 Kh8 19. h4 Be6 20. h5 gxh5 21. d4 N8d7 22. gxf6 Rg4
+    23. f7 h4 24. Rxh4+ Rxh4 25. f8=Q+ Nxf8 26. f4 Bd5 27. a4 Rc8 28. f5 b4 29. Ke2
+    Kh7 30. f6 Kg8 31. e4 Ng6 32. exd5 Rh5 33. a5 Nf8 34. c3 Rb8 35. Nd2 Rg5 36. Rb1
+    Kh8 37. Ba3 Kg8 38. d6 Rg6 39. Kd3 Rc8 40. Ke4 Rg5 41. f7+ Kh7 42. Ke3 Rg4 43.
+    cxb4 Rxd4 44. Ne4 Rd2 45. d7 Kh8 46. dxc8=Q Rd3+ 47. Bxd3 Kh7 48. Rc1 Ne6 49.
+    b5 Kg7 50. Bb4 Nd8 51. Qb7 Kh6 52. Qxa6+ Kg7 53. f8=Q+ Kh7 54. Qxd8 Kg7 55. b6
+    Kf7 56. Qe8+ Kxe8 57. Qa7 Kd8 58. Qa8+ Kd7 59. Qa7+ Ke8 60. a6 Kd8 61. Be2 Ke8
+    62. Kd4 Kd8 63. Qa8+ Kd7 64. Ke5 1/2-1/2'
+  - '[Event "?"]
+
+    [Site "?"]
+
+    [Date "????.??.??"]
+
+    [Round "?"]
+
+    [White "RandomAgent"]
+
+    [Black "ResNetMCTSAgent"]
+
+    [Result "1/2-1/2"]
+
+    [FEN "rnbqkbnr/1p1ppppp/p1p5/8/8/4PQ2/PPPP1PPP/RNB1KBNR w KQkq - 0 3"]
+
+    [SetUp "1"]
+
+    [Termination "Draw by Insufficient Material"]
+
+    [Variant "From Position"]
+
+
+    3. c4 h6 4. b4 e6 5. Qxf7+ Kxf7 6. e4 Rh7 7. Nc3 d6 8. Nd1 Ne7 9. d4 g6 10. h4
+    b6 11. Nh3 Kf6 12. g3 Qe8 13. f3 Bb7 14. h5 Qd7 15. Bg2 g5 16. Ne3 c5 17. d5 Nbc6
+    18. e5+ Nxe5 19. O-O Bg7 20. Nf5 Rc8 21. Rb1 Rb8 22. Rf2 g4 23. Rc2 Kxf5 24. Rc3
+    a5 25. a4 Ra8 26. Bh1 Bf6 27. Be3 gxf3 28. Rc2 Rb8 29. Bxf3 exd5 30. Bd2 Nxf3+
+    31. Kg2 dxc4 32. Bxh6 Rxh6 33. Rf1 Rxh5 34. Nf4 d5 35. Ne6 d4 36. Nxc5 Qd6 37.
+    Rh1 b5 38. Rcc1 Ne5+ 39. Kg1 c3 40. Na6 Ra8 41. Rxh5+ Kg4 42. Rc2 Bc8 43. Nc7
+    Bg5 44. Nxb5 Kxg3 45. bxa5 Rb8 46. Rb2 Nf7 47. Kf1 Qd5 48. Rxg5+ Bg4 49. Rh2 Qe4
+    50. Rg7 Rc8 51. Rxg4+ Kxg4 52. Ra2 Qf3+ 53. Kg1 Kg3 54. Nd6 Qg4 55. Rf2 Qh3 56.
+    Nxf7 Kg4 57. Rd2 Kf3 58. Rf2+ Ke4 59. Rh2 Rb8 60. Rh1 Ra8 61. Nh6 Qh2+ 62. Kxh2
+    Ra7 63. a6 Kd5 64. Ng8 Ra8 65. Rf1 Rb8 66. Nxe7+ Ke4 67. Nf5 Kd3 68. Ra1 Kd2 69.
+    Ra3 d3 70. Kg1 Ra8 71. Nd4 Kc1 72. Nb3+ Kb1 73. Nd4 Kb2 74. Kh2 Rb8 75. Ra1 Rc8
+    76. Nc6 Ra8 77. Nd8 Ra7 78. Ra3 Ra8 79. Nf7 Rb8 80. Kg2 Kb1 81. Kf1 Ra8 82. Ne5
+    Rc8 83. Kg1 Kc2 84. Kg2 Rb8 85. Ng4 Rb7 86. Kh2 Rb6 87. Rb3 Rb5 88. Rb2+ Kd1 89.
+    axb5 cxb2 90. Nf2+ Ke1 91. b6 b1=Q 92. Kg3 Kf1 93. Kg4 Ke1 94. Kg5 Qa1 95. Nd1
+    Qxd1 96. a7 Ke2 97. b7 d2 98. a8=N Kf3 99. Kf5 Kf2 100. b8=R Qe1 101. Nb6 Kf3
+    102. Rb7 d1=Q 103. Rb8 Qd8 104. Rxd8 Qe2 105. Kf6 Qe1 106. Rd3+ Ke4 107. Kg6 Ke5
+    108. Rd8 Ke4 109. Nc4 Qd1 110. Nd2+ Ke5 111. Kh6 Qe1 112. Rd6 Kxd6 113. Kg7 Qd1
+    114. Kh7 Qxd2 115. Kg7 Qd3 116. Kg8 Kd5 117. Kg7 Qe4 118. Kf7 Qe5 119. Kg6 Qe4+
+    120. Kg5 Qe5+ 121. Kh6 Kd4 122. Kg6 Kd3 123. Kh7 Kd4 124. Kh6 Qf6+ 125. Kh5 Ke5
+    126. Kg4 Kd4 127. Kh5 Ke5 128. Kg4 Kd4 129. Kh5 Ke5 130. Kg4 Ke4 131. Kh5 Kd5
+    132. Kg4 Qf5+ 133. Kh4 Qf6+ 134. Kg4 Kc6 135. Kh5 Qe5+ 136. Kh6 Kd5 137. Kg6 Kd6
+    138. Kh6 Qd4 139. Kh5 Qe3 140. Kg4 Qd4+ 141. Kf5 Qe3 142. Kg4 Qd4+ 143. Kg5 Qe5+
+    144. Kh4 Qd4+ 145. Kg3 Qe5+ 146. Kh3 Qd4 147. Kg2 Kd5 148. Kh2 Qc3 149. Kg1 Kd6
+    150. Kh2 Kd5 151. Kg2 Kd6 152. Kh2 Kd7 153. Kg1 Kd6 154. Kh2 Kd5 155. Kg1 Kd6
+    156. Kh2 Kd5 157. Kh1 Kd4 158. Kg2 Kd3 159. Kg1 Qc4 160. Kh1 Qc5 161. Kh2 Qc6
+    162. Kg1 Kd4 163. Kf2 Kd5 164. Ke2 Qc5 165. Kd1 Qb6 166. Kc2 Qb5 167. Kc1 Qb4
+    168. Kc2 Qb3+ 169. Kxb3 1/2-1/2'
+  - '[Event "?"]
+
+    [Site "?"]
+
+    [Date "????.??.??"]
+
+    [Round "?"]
+
+    [White "ResNetMCTSAgent"]
+
+    [Black "RandomAgent"]
+
+    [Result "1/2-1/2"]
+
+    [FEN "rnbqkbnr/p2ppppp/8/1pp5/8/4P3/PPPPNPPP/RNBQKB1R w KQkq - 0 3"]
+
+    [SetUp "1"]
+
+    [Termination "Draw by Insufficient Material"]
+
+    [Variant "From Position"]
+
+
+    3. b3 e6 4. Nf4 Na6 5. c3 Be7 6. a3 Bf8 7. f3 Nh6 8. g4 Bd6 9. h3 Be7 10. g5 Bd6
+    11. h4 Qf6 12. gxf6 Ng8 13. h5 Bf8 14. h6 Nb8 15. Ng6 Nc6 16. hxg7 Nd4 17. d3
+    Ne7 18. Nxh8 b4 19. f4 Rb8 20. Nxf7 Rb6 21. Nh8 Rb8 22. gxf8=Q+ Kxf8 23. fxe7+
+    Kxe7 24. e4 Rb7 25. Nf7 Nf5 26. Nh8 Kf6 27. e5+ Kg7 28. d4 Ng3 29. Nf7 Kg6 30.
+    f5+ Kxf5 31. c4 a5 32. Nh8 Rb8 33. Nf7 bxa3 34. Rg1 h6 35. Qd2 Ne4 36. Qd3 a2
+    37. b4 Rxb4 38. Nh8 axb1=Q 39. Rh1 Qb3 40. Rh4 Qb1 41. Rh5+ Kg4 42. Rh4+ Kxh4
+    43. Qxe4+ Kh5 44. Qd5 Qe4+ 45. Qxe4 Rb1 46. Qd5 Bb7 47. Kd2 Ba6 48. Bg2 Kg4 49.
+    Kd3 Kh4 50. Ra2 h5 51. Ra1 Rb2 52. Bf1 Bc8 53. Qe4+ Kg3 54. d5 Bb7 55. Be2 Bc8
+    56. Rb1 h4 57. d6 a4 58. Qd5 Rb3+ 59. Ke4 exd5+ 60. cxd5 Kh2 61. Ra1 Rb2 62. Rb1
+    Rxe2+ 63. Be3 Bb7 64. e6 Rc2 65. Kd3 Ba6+ 66. Kxc2 a3 67. Ra1 Be2 68. Kc3 Bb5
+    69. exd7 c4 70. Rb1 Kg2 71. Rb2+ Kh3 72. d8=Q a2 73. Nf7 a1=Q 74. Qe8 Ba6 75.
+    Qg8 Qa3+ 76. Rb3 Qxb3+ 77. Kd4 Qb2+ 78. Kc5 Qd4+ 79. Kc6 Bc8 80. Bxd4 Ba6 81.
+    Kc7 c3 82. Bxc3 Bd3 83. Kc6 Bg6 84. Kc5 Kh2 85. Qh8 Kg2 86. Kd4 Bh5 87. Qg8+ Bg4
+    88. Ke5 Kg3 89. Kd4 Kf2 90. Qh8 Bd1 91. d7 Be2 92. Ke5 Kg2 93. Kd6 Kh3 94. Qg8
+    Bg4 95. Bd4 Be6 96. Be5 Bxf7 97. Qg7 Bg8 98. Bd4 Be6 99. Be5 Bf7 100. Qg6 Bxg6
+    101. Bd4 Kg3 102. Be5+ Kh3 103. Bf6 Bh5 104. Bg7 Be2 105. Bf6 Kg4 106. Bg5 Kf5
+    107. Bf6 Kxf6 108. d8=Q+ Kf7 109. Qe8+ Kxe8 110. Ke5 Kf7 111. Kd4 Bf1 112. Kc3
+    Kf6 113. d6 Ke5 114. Kd2 Bc4 115. Ke3 Ba6 116. d7 Kd5 117. d8=Q+ Ke5 118. Qd7
+    Kf6 119. Ke4 Bc4 120. Ke3 Bd5 121. Qd6+ Be6 122. Qd5 Bxd5 123. Kd4 Ke7 124. Kc3
+    Bf3 125. Kc4 Ba8 126. Kd3 Kf8 127. Kd4 Kg7 128. Ke5 Kf8 129. Kd4 Kf7 130. Kc5
+    Be4 131. Kb6 Bf5 132. Kb5 Bh7 133. Kc6 Ke8 134. Kc7 Kf8 135. Kc6 Bf5 136. Kc7
+    Bd7 137. Kd8 Kf7 138. Kxd7 Kg7 139. Kd6 Kf8 140. Kd5 Ke7 141. Kc6 Kf7 142. Kc7
+    Kg6 143. Kc6 Kg7 144. Kc5 Kf8 145. Kc4 h3 146. Kc5 Ke8 147. Kc4 Kf8 148. Kc5 h2
+    149. Kb5 h1=B 1/2-1/2'
+  - '[Event "?"]
+
+    [Site "?"]
+
+    [Date "????.??.??"]
+
+    [Round "?"]
+
+    [White "RandomAgent"]
+
+    [Black "ResNetMCTSAgent"]
+
+    [Result "1/2-1/2"]
+
+    [FEN "rnbqkbnr/p2ppppp/8/1pp5/8/4P3/PPPPNPPP/RNBQKB1R w KQkq - 0 3"]
+
+    [SetUp "1"]
+
+    [Termination "Draw by 75-move rule"]
+
+    [Variant "From Position"]
+
+
+    3. a4 a6 4. axb5 Nf6 5. c4 e6 6. Ng1 Nc6 7. Bd3 d6 8. b3 Rg8 9. Rxa6 Rh8 10. f3
+    Bb7 11. Ra4 Rg8 12. Qc2 Rh8 13. Ke2 Kd7 14. Be4 g6 15. b4 Bg7 16. Bf5 g5 17. e4
+    Qe8 18. Qc3 d5 19. Bxe6+ Kd6 20. Qa1 Rg8 21. g3 Bf8 22. h4 Bg7 23. g4 Rh8 24.
+    Ke1 Rg8 25. d3 Rh8 26. Qc3 Nxe4 27. Ra6 Qd8 28. Rxa8 f6 29. Bd2 f5 30. Qa3 f4
+    31. Qa5 h6 32. Qa2 Bxa8 33. d4 Qe8 34. Rh2 Qd8 35. Re2 Rf8 36. bxc5+ Kxe6 37.
+    cxd5+ Kd7 38. Nh3 Rf7 39. Qc4 Qe7 40. Rh2 Qd8 41. Bxf4 Rf6 42. Qf1 Qh8 43. Nxg5
+    Qg8 44. Nxe4 Kd8 45. Nd6 Kd7 46. Nc8 Ne5 47. d6 Nc6 48. Nc3 Ne5 49. Ne7 Qh8 50.
+    Qg2 Qg8 51. Ne2 Qh8 52. Ng8 Qxg8 53. Rh3 h5 54. Nc3 hxg4 55. dxe5 gxf3 56. exf6
+    Bxf6 57. Na2 Bg5 58. Nc1 fxg2 59. Rb3 Bxf4 60. Rc3 g1=Q+ 61. Ke2 Be3 62. c6+ Kxd6
+    63. Rc2 Bd4 64. Rd2 Qh8 65. c7 Qhg8 66. Rb2 Qf2+ 67. Kd1 Qh8 68. c8=B Qg8 69.
+    Rxf2 Qh8 70. Bf5 Kc7 71. Nb3 Qg8 72. Rf4 Qh8 73. Nc1 Be5 74. Nb3 Bd4 75. Bh7 Qg8
+    76. Rf3 Qh8 77. Rf7+ Kb6 78. Rf5 Qxh7 79. Ke2 Bc3 80. Na1 Qh6 81. Kd3 Qh7 82.
+    Ke3 Qh6+ 83. Rf4 Kxb5 84. Kf2 Kb6 85. Rf3 Bb2 86. h5 Qxh5 87. Rg3 Qh4 88. Ke1
+    Bd4 89. Nc2 Be3 90. Kf1 Bd4 91. Na1 Qg5 92. Nc2 Be5 93. Nb4 Qg4 94. Kf2 Qxg3+
+    95. Ke2 Qg2+ 96. Ke3 Bd6 97. Na6 Kb5 98. Kd3 Be5 99. Nb4 Bb7 100. Na2 Bd4 101.
+    Nc3+ Bxc3 102. Ke3 Kc5 103. Kd3 Qg3+ 104. Kc2 Bc8 105. Kd1 Be6 106. Kc2 Qf4 107.
+    Kxc3 Kc6 108. Kc2 Bf7 109. Kb2 Kc5 110. Ka1 Be8 111. Kb1 Kc6 112. Ka1 Bf7 113.
+    Kb2 Qf5 114. Ka3 Qf4 115. Kb2 Bg6 116. Kc3 Bh7 117. Kb3 Qf3+ 118. Ka2 Qf4 119.
+    Kb2 Qf5 120. Ka1 Qf4 121. Kb2 Kc5 122. Kb3 Kd4 123. Ka3 Bg6 124. Ka4 Ke5+ 125.
+    Kb5 Bh5 126. Kc5 Ke4 127. Kc6 Ke5 128. Kd7 Kd4 129. Kd8 Qe3 130. Kc7 Kd5 131.
+    Kc8 Kc6 132. Kb8 Qe4 133. Ka7 Qf3 134. Ka6 Kc5 135. Ka7 Kc4 136. Ka6 Kc5 137.
+    Ka5 Qf4 138. Ka6 Qf5 139. Ka5 Bg4 140. Ka4 Qf4+ 141. Kb3 Bf3 142. Kb2 Kc4 143.
+    Kb1 Qf5+ 144. Kb2 Qf6+ 145. Kc2 Qf5+ 146. Kb2 Qf6+ 147. Ka2 Qf5 148. Ka3 Qf6 149.
+    Ka2 Qf5 150. Ka1 Qf6+ 151. Ka2 Kc5 152. Ka3 Qf5 153. Ka4 Qf4+ 154. Ka3 Qf5 155.
+    Ka2 Qf6 156. Ka3 Qf5 157. Ka2 Qf4 158. Kb2 Kc4 159. Ka3 Kc3 160. Ka2 Kc4 161.
+    Kb1 Kc5 162. Ka2 Kc6 163. Ka1 Kc5 164. Ka2 Kc4 165. Ka3 Kc5 166. Kb2 Kc4 167.
+    Ka3 Bg4 168. Kb2 Qf5 169. Ka1 Qf4 170. Ka2 Kc3 171. Ka3 Bf3 172. Ka2 Kc4 173.
+    Ka1 Qf5 174. Ka2 Qf4 175. Kb1 Kc3 176. Ka2 Bg4 177. Ka1 Bf5 178. Ka2 Bc8 179.
+    Kb1 Qf3 180. Ka2 Bb7 181. Ka1 Qg4 182. Ka2 1/2-1/2'
+  - '[Event "?"]
+
+    [Site "?"]
+
+    [Date "????.??.??"]
+
+    [Round "?"]
+
+    [White "ResNetMCTSAgent"]
+
+    [Black "RandomAgent"]
+
+    [Result "1/2-1/2"]
+
+    [FEN "rnbqkbnr/pp1pppp1/2p5/7p/4P1Q1/8/PPPP1PPP/RNB1KBNR w KQkq - 0 3"]
+
+    [SetUp "1"]
+
+    [Termination "Draw by 75-move rule"]
+
+    [Variant "From Position"]
+
+
+    3. c3 d5 4. Qxc8 f5 5. Qd7+ Qxd7 6. f4 e5 7. Nh3 Nf6 8. Ng5 Qd6 9. exd5 g6 10.
+    dxc6 Nxc6 11. Nh7 b5 12. Nxf8 Ng4 13. b4 a6 14. h3 Nh2 15. Nh7 Ra7 16. h4 Rf7
+    17. c4 Rfxh7 18. c5 Qd3 19. g4 Na7 20. g5 Qe4+ 21. Be2 Qa8 22. Bd1 Re7 23. c6
+    Rh6 24. c7 Ng4 25. a3 Rxc7 26. fxe5 Re7 27. gxh6 Nxh6 28. a4 Nc8 29. Bb2 Qb8 30.
+    e6 Rh7 31. e7 a5 32. Bg7 Nd6 33. Bf8 Kf7 34. Na3 Ke6 35. Bg7 Nhf7 36. Bf8 Qd8
+    37. Bg7 f4 38. d3 Kd5 39. Bf8 Nh6 40. Bg7 Qa8 41. Kf1 Qe8 42. Bf8 Nhf5 43. Rg1
+    bxa4 44. Bg7 Qf7 45. Rh1 Ke6 46. Kg2 g5 47. Kf3 Nxe7 48. d4 Ne4 49. b5 Rh8 50.
+    b6 Qe8 51. Bc2 Rg8 52. Bf8 Nd5 53. Be7 Rg7 54. b7 Qh8 55. Nc4 Qh7 56. Bf6 Nexf6
+    57. b8=Q Ke7 58. Qc8 Nc3 59. Nd2 Kd6 60. d5 Nce4 61. Qd8+ Ke5 62. Rhf1 Qh8 63.
+    Qe8+ Kxd5 64. Rfe1 Nd7 65. Bxe4+ Kc5 66. Bd5 Nb8 67. Rad1 Na6 68. Bc4 Nb4 69.
+    Qd8 Rd7 70. Bb3 g4+ 71. Kf2 Rg7 72. Rc1+ Nc2 73. Red1 g3+ 74. Kf3 g2 75. Re1 a3
+    76. Kxf4 Qg8 77. Rf1 g1=B 78. Rfe1 Qe6 79. Ne4+ Kb4 80. Rf1 Qa6 81. Rfe1 Bc5 82.
+    Qe8 Qf1+ 83. Rxf1 Ba7 84. Qd7 Ne3 85. Qc8 Rg5 86. Rfe1 Ng4 87. Qc7 Rd5 88. Qc6
+    Nh2 89. Qxd5 Nf1 90. Qc6 Nh2 91. Qc5+ Bxc5 92. Kf5 a4 93. Rf1 Ka5 94. Kf4 Be3+
+    95. Kg3 Bd2 96. Kg2 Bf4 97. Rfe1 Nf3 98. Kxf3 Be5 99. Rf1 a2 100. Rfe1 Bh8 101.
+    Rf1 axb3 102. Nd2 a1=Q 103. Kf4 Qa2 104. Rcd1 Ka4 105. Rfe1 Bb2 106. Kf5 Bh8 107.
+    Nc4 Kb5 108. Kg6 Kb4 109. Nd6 Qb1+ 110. Kg5 b2 111. Rf1 Qa1 112. Rfe1 Qa3 113.
+    Rf1 Qa2 114. Rde1 Bg7 115. Rd1 Qa7 116. Rde1 Bf6+ 117. Rxf6 Qg1+ 118. Rxg1 b1=R
+    119. Rh1 Rb2 120. Rf5 Rf2 121. Rf6 Ka3 122. Rf5 Re2 123. Rf4 Rf2 124. Rg1 Rg2+
+    125. Kh6 Kb3 126. Rf3+ Ka2 127. Rf4 Rb2 128. Kh7 Rc2 129. Kh6 Rc3 130. Rf3 Rb3
+    131. Rf2+ Rb2 132. Rf7 Rh2 133. Kg7 Re2 134. Kh6 Re6+ 135. Rf6 Rxf6+ 136. Kh7
+    Rg6 137. Rh1 Rh6+ 138. Kxh6 Kb3 139. Kxh5 Ka4 140. Kh6 Ka3 141. Kh7 Kb4 142. h5
+    Kb3 143. Rg1 Kc2 144. h6 Kb3 145. Rg2 Ka3 146. Rg1 Kb2 147. Kh8 Ka3 148. Rg2 Kb4
+    149. Kg8 Ka4 150. Rg3 Kb4 151. Kh8 Ka5 152. Rg2 Kb4 153. Rg3 Ka5 154. Nc4+ Ka4
+    155. Rg2 Kb3 156. Kg8 Kb4 157. Kh8 Kb5 158. h7 Ka6 159. Kg8 Kb5 160. Rg3 Ka6 161.
+    Rg4 Ka7 162. Nd2 Ka6 163. Rg5 Ka7 164. Rg4 Kb6 165. Kh8 Ka6 166. Kg8 Kb6 167.
+    Kh8 Ka5 168. Rg3 Kb6 169. Rg4 Ka7 170. Rg5 Kb6 171. Kg8 Kc7 172. Kh8 Kb6 173.
+    Kg8 Ka6 174. Rg6+ Kb7 175. Rh6 Kc8 176. Kh8 Kb8 177. Rh5 Ka7 178. Kg8 Ka8 179.
+    Kh8 Ka7 180. Kg8 Kb6 181. Kh8 Ka7 182. Kg8 Kb7 183. Rh6 Kc7 184. Kh8 Kb7 185.
+    Rh5 Ka8 186. Kg8 Ka7 187. Kh8 Ka6 188. Rh4 Kb6 189. Kg8 Ka5 190. Kh8 Kb5 191.
+    Kg8 Ka6 192. Rg4 Kb6 193. Rg3 Ka6 194. Kh8 Kb7 195. Rg4 Kc7 196. Rg3 Kc6 197.
+    Rg2 Kb5 198. Kg8 Ka6 199. Kh8 Kb7 200. Kg8 Kb8 201. Kh8 Kb7 202. Kg8 Kc7 203.
+    Kh8 Kd7 204. Kg8 Ke8 205. Kh8 Kd8 206. Kg8 Ke8 207. Kh8 Kd7 208. Kg8 Kc6 209.
+    Kh8 Kb7 210. Kg8 Ka6 211. Rg3 Ka5 212. Rg4 Kb5 213. Rg3 Kc5 214. Kh8 Kc6 215.
+    Rg4 Kd7 216. Kg8 Ke8 217. Rg3 Ke7 218. Kh8 Kf6 219. Kg8 Kf5 220. Kh8 Ke5 221.
+    Rg4 Kd6 222. Rg3 Kd5 223. Rg4 Ke6 224. Kg8 Ke5 225. Rg3 Kf5 226. Kh8 Ke6 227.
+    Kg8 Ke5 228. Kh8 Kf4 229. Kg8 Kxg3 230. Kh8 Kg2 231. Kg8 Kh1 232. Kh8 Kg2 233.
+    Kg8 Kg1 234. Ne4 Kh2 235. Kh8 Kg1 236. Nd2 Kf2 237. Kg8 Kg2 238. Kh8 Kg1 239.
+    Kg8 Kh1 240. Kh8 Kg2 241. Kg8 Kh1 242. Kh8 Kg2 243. Kg7 Kg1 244. Kg6 Kf2 245.
+    Kg7 Ke3 246. Ne4 Kd3 247. h8=Q Kd4 248. Kg6+ Kd3 249. Qh7 Kd4 250. Qh6 Ke5 251.
+    Kg5 Kxe4 252. Kg6 Kd4 253. Qh5 Ke3 254. Kg5 Kd4 255. Qh4+ Kd3 256. Kh6 Ke3 257.
+    Qh5 Kf4 258. Kh7 Ke3 259. Kh6 Kf2 260. Kh7 Kg2 261. Qh3+ Kg1 262. Kh6 Kf2 263.
+    Kh5 Ke1 264. Qh4+ Kd1 265. Qg3 Kc1 266. Kh6 Kd2 267. Qg4 Kd3 268. Kh7 Kc2 269.
+    Kh6 Kb3 270. Kh7 Kc2 271. Kh6 Kd3 272. Kh7 Ke3 273. Kh8 Kd3 274. Kh7 Kd2 275.
+    Qg5+ Ke1 276. Kh6 Ke2 277. Qg4+ Kd3 278. Qg5 Kc4 279. Qg4+ Kc3 280. Kh7 Kb3 281.
+    Qg3+ Ka4 282. Qg4+ Kb5 283. Qg3 Kc4 284. Kh6 Kb4 285. Kh7 Ka4 286. Kh6 Kb4 287.
+    Qg4+ Ka3 288. Qf3+ Ka4 289. Qg4+ Ka3 290. Kh7 Kb3 291. Qg3+ Kb2 292. Qg4 Kb3 293.
+    Kh8 Kc2 294. Qg3 Kb2 295. Kh7 Kb1 296. Qg4 Kc1 297. Kh6 Kb2 298. Qg5 Kb1 299.
+    Kh5 Ka1 300. Qg6 Kb2 301. Qg5 Kb3 302. Kh6 Ka3 303. Qg6 Kb4 304. Kh7 Ka3 305.
+    Kh6 Kb2 306. Kh5 Kb3 307. Kg4 Kc3 308. Qg5 Kb4 309. Qg6 Ka4 310. Qg5 Kb3 311.
+    Qf6 Kb4 312. Qf5 Kb3 313. Kg3 Kb4 314. Kg4 Ka3 315. Qf6 Kb3 316. Qf5 Ka3 317.
+    Qg6 Ka4 318. Kg5 Kb4 319. Kg4 Kc3 320. Qg5 Kb3 321. Kg3 Kc3 322. Qf6+ Kc2 323.
+    Qg5 Kb3 324. Qg4 Kc3 325. Qg5 Kb3 326. Qg4 Kb2 1/2-1/2'
+  - '[Event "?"]
+
+    [Site "?"]
+
+    [Date "????.??.??"]
+
+    [Round "?"]
+
+    [White "RandomAgent"]
+
+    [Black "ResNetMCTSAgent"]
+
+    [Result "0-1"]
+
+    [FEN "rnbqkbnr/pp1pppp1/2p5/7p/4P1Q1/8/PPPP1PPP/RNB1KBNR w KQkq - 0 3"]
+
+    [SetUp "1"]
+
+    [Termination "Normal (Checkmate)"]
+
+    [Variant "From Position"]
+
+
+    3. Be2 hxg4 4. Bd1 Nf6 5. c3 Rg8 6. Ne2 e6 7. Ba4 a6 8. h3 Rh8 9. Ng3 Rg8 10.
+    Bc2 Rh8 11. Na3 Rg8 12. b4 Rh8 13. Rf1 d6 14. Bd3 Rg8 15. Ne2 b6 16. Bxa6 Rh8
+    17. Rh1 Rg8 18. g3 c5 19. b5 Rh8 20. Rg1 Rg8 21. f4 Rh8 22. Rh1 Rg8 23. d4 Rh8
+    24. c4 Rg8 25. Bb2 Rh8 26. h4 Rg8 27. e5 Rh8 28. Kd2 Kd7 29. d5 Qe7 30. Bd4 Nxd5
+    31. Raf1 dxe5 32. Kd1 f6 33. cxd5 exd4 34. Kc1 g6 35. Nxd4 Rh7 36. Bxc8+ Kd6 37.
+    Rhg1 Kc7 38. Kd2 Kxc8 39. Nxe6 Qxe6 40. Rh1 Bg7 41. Nc4 g5 42. fxg5 Nc6 43. Rb1
+    Kd8 44. Rhg1 Kd7 45. Rgd1 Qe5 46. Ra1 Kd8 47. Nxe5 Ke8 48. a3 Kd8 49. Nf3 Kc8
+    50. Kc1 gxf3 51. g6 Rh6 52. Ra2 Rh5 53. Rc2 Rxh4 54. Rdd2 Rb8 55. Rc3 c4 56. Rb2
+    Bf8 57. Kc2 Rh5 58. Rxc4 Bd6 59. Kc3 Rh4 60. Rh2 f5 61. Rxc6+ Kb7 62. Rc5 f4 63.
+    Rc4 fxg3 64. a4 Rh3 65. Rb4 Rxh2 66. g7 Be7 67. Kd4 Kc8 68. g8=B g2 69. a5 Bg5
+    70. Ke5 Rh3 71. a6 f2 72. Be6+ Kc7 73. Re4 Bf6+ 74. Kxf6 g1=Q 75. Kf5 Rb7 76.
+    Re2 Rh4 77. Rd2 Rh5+ 78. Ke4 Rb8 79. Ra2 Rb7 80. axb7 Kd6 81. Rd2 f1=Q 82. Rd4
+    Ke7 83. b8=N Qfg2+ 84. Kf4 Rh6 85. Rb4 Kf6 86. Bg8 Rh5 87. Re4 Qg3# 0-1'
+  - '[Event "?"]
+
+    [Site "?"]
+
+    [Date "????.??.??"]
+
+    [Round "?"]
+
+    [White "ResNetMCTSAgent"]
+
+    [Black "RandomAgent"]
+
+    [Result "1/2-1/2"]
+
+    [FEN "rnbqkbnr/1p1ppppp/2p5/p7/8/2P5/PPQPPPPP/RNB1KBNR w KQkq - 0 3"]
+
+    [SetUp "1"]
+
+    [Termination "Draw by Insufficient Material"]
+
+    [Variant "From Position"]
+
+
+    3. g3 b6 4. b4 a4 5. e3 f6 6. d3 c5 7. bxc5 h5 8. g4 hxg4 9. cxb6 f5 10. Qxa4
+    g5 11. Qa3 Rxa3 12. Nh3 Ba6 13. Nxg5 Rxa2 14. Nd2 e5 15. Bg2 e4 16. Nh7 exd3 17.
+    Rb1 Kf7 18. Nxf8 Rxh2 19. c4 Rxh1+ 20. Bf1 Rh3 21. f3 d5 22. fxg4 fxg4 23. Be2
+    Qc8 24. c5 Qc6 25. Ne4 Nh6 26. Kf1 Rc2 27. Ra1 Qa4 28. c6 Qa3 29. Nh7 Qf8 30.
+    Nxf8 Rxe3 31. Ng3 Kxf8 32. c7 Re6 33. Ra2 Rxb6 34. Ra3 Nf7 35. Kg2 Ra2 36. Ra4
+    Bb7 37. Ra3 Nd6 38. Bd2 Ke7 39. Kf1 Nd7 40. Kg2 Nf8 41. Ra4 Ra1 42. Bd1 Nc4 43.
+    Ra5 Rb5 44. Ra6 Ne6 45. Ra7 Rbb1 46. Ra6 Ng5 47. Ra5 Nxd2 48. Bc2 dxc2 49. Ra6
+    Rb4 50. Ra5 Rd1 51. Ra6 Nge4 52. Ra5 Kf8 53. c8=Q+ Kf7 54. Ra4 c1=N 55. Qxb7+
+    Kf6 56. Ra3 Nd3 57. Qb5 d4 58. Ra4 Nd6 59. Ra5 N6e4 60. Ra4 Kg6 61. Qa6+ Nd6 62.
+    Ra5 Rc4 63. Ra4 Kh6 64. Ra5 Nb4 65. Qb7 Nc8 66. Qb6+ Rc6 67. Ra6 Nd3 68. Ra5 Rf6
+    69. Ra4 Ne5 70. Ra3 Nd3 71. Qb5 Rdf1 72. Qb4 Ra6 73. Qc3 Nf2 74. Qb2 Rb1 75. Qc3
+    Rab6 76. Qc4 Nd3 77. Ra4 Nf1 78. Ra3 Kh7 79. Qc3 Rg6 80. Ra2 Ne3+ 81. Kh2 dxc3
+    82. Ra3 Rgb6 83. Ra4 Rd6 84. Ra3 Rc6 85. Ra2 Rb2+ 86. Kh1 Rd6 87. Ra3 Rb4 88.
+    Ra2 Rdb6 89. Ra3 Na7 90. Ra4 Nd1 91. Ra3 Rf4 92. Ra4 c2 93. Ra3 Rb1 94. Ra2 c1=R
+    95. Ra3 Nc6 96. Nf5 Rc5 97. Kg1 N1b2+ 98. Kg2 Rfxf5 99. Ra2 Nce5 100. Kg3 Kh8
+    101. Ra3 Rbc1 102. Ra2 Rc6 103. Kh4 Re6 104. Ra1 Ng6+ 105. Kg3 Rcc5 106. Kg2 Nh4+
+    107. Kg3 Na4 108. Ra2 Ng2 109. Kxg4 Nf2+ 110. Kg3 Nb2 111. Kxg2 Nh3 112. Ra3 Ng5
+    113. Ra4 Nxa4 114. Kg3 Rh6 115. Kg4 Nb2 116. Kg3 Re6 117. Kg2 Nc4 118. Kg3 Nf7
+    119. Kg4 Ra6 120. Kg3 Rg6+ 121. Kh3 Rfe5 122. Kh2 Nfd6 123. Kh3 Rg4 124. Kh2 Re7
+    125. Kh3 Ne3 126. Kh2 Kg8 127. Kh3 Rc8 128. Kh2 Rg6 129. Kh3 Rg5 130. Kh2 Nf7
+    131. Kh3 Ra8 132. Kh4 Nc2 133. Kh3 Ne3 134. Kh2 Rg1 135. Kh3 Rf1 136. Kh4 Re4+
+    137. Kh3 Rd4 138. Kh2 Rda4 139. Kh3 Ng2 140. Kh2 Ne3 141. Kh3 Rg4 142. Kh2 Rf2+
+    143. Kh3 Re4 144. Kg3 Re6 145. Kxf2 Ng5 146. Ke1 Kf7 147. Kf2 Kg6 148. Ke1 Kg7
+    149. Ke2 Ng4+ 150. Kd1 Ra1+ 151. Kd2 Kh8 152. Kd3 Ree1 153. Kd4 Nh2 154. Kd5 Nf7
+    155. Kd4 Re6 156. Kd5 Re7 157. Kd4 Kg7 158. Kd3 Rh1 159. Kd4 Kg8 160. Kd3 Nh8
+    161. Kc2 Kf8 162. Kd3 Nf3 163. Kc2 Rc1+ 164. Kd3 Rg1 165. Kc4 Rb7 166. Kc5 Rg3
+    167. Kc6 Ng1 168. Kxb7 Rg6 169. Kb8 Rg4 170. Kc8 Rb4 171. Kd7 Re4 172. Kd6 Re5
+    173. Kxe5 Ne2 174. Kd6 Ng3 175. Kd7 Kg7 176. Kd6 Kf7 177. Kd5 Kf8 178. Kd4 Ne4
+    179. Kd5 Ke7 180. Kxe4 1/2-1/2'
+  - '[Event "?"]
+
+    [Site "?"]
+
+    [Date "????.??.??"]
+
+    [Round "?"]
+
+    [White "RandomAgent"]
+
+    [Black "ResNetMCTSAgent"]
+
+    [Result "1/2-1/2"]
+
+    [FEN "rnbqkbnr/1p1ppppp/2p5/p7/8/2P5/PPQPPPPP/RNB1KBNR w KQkq - 0 3"]
+
+    [SetUp "1"]
+
+    [Termination "Draw by Insufficient Material"]
+
+    [Variant "From Position"]
+
+
+    3. Qf5 d6 4. h3 Nf6 5. Qg6 h6 6. h4 Rg8 7. g3 e6 8. h5 Rh8 9. Qxg7 Rg8 10. a3
+    Rh8 11. e4 Rg8 12. Kd1 Kd7 13. Bg2 Bxg7 14. g4 d5 15. Bf1 a4 16. Ra2 Qe8 17. g5
+    b6 18. Nf3 dxe4 19. Bg2 Qd8 20. gxh6 Kd6 21. Rh4 Bb7 22. Nd4 e3 23. Be4 Rh8 24.
+    Bd5 Rg8 25. Re4 e5 26. Rxe3 c5 27. Nb3 Qe8 28. Bh1 Nd5 29. Na5 Nc6 30. Re2 f6
+    31. Bg2 Nd4 32. d3 f5 33. Bf4 Bf8 34. Ke1 Bg7 35. f3 Qd8 36. hxg7 Qc8 37. Bh3
+    b5 38. b3 Qd8 39. Rf2 Kd7 40. Bg2 Ba6 41. Rfd2 Kd6 42. Kf1 Qe8 43. Ke1 b4 44.
+    Nc4+ Ke7 45. Nxe5 Qd8 46. Ng6+ Kf6 47. Rdb2 Qe8+ 48. Kf1 bxc3 49. Nh8 c4 50. Be3
+    Rxg7 51. Bh1 Rg6 52. Nxg6 Kg7 53. Bxd4+ Kg8 54. Ba7 f4 55. d4 cxb2 56. Bb8 Qf7
+    57. Nxf4 Ra7 58. Bg2 Ne3+ 59. Ke2 Bb7 60. Bd6 cxb3 61. Bf8 Kh8 62. Be7 Kh7 63.
+    Bb4 Ra6 64. d5 Kg7 65. Be1 Kh6 66. Nd3 Kg7 67. Bd2 Ra5 68. Bxa5 Qf6 69. Bb6 Qf5
+    70. Bd4+ Qf6 71. Kd2 Kf8 72. Bh3 Ke7 73. Nf2 Qe5 74. Bc8 Bxd5 75. Nh3 Qxd4+ 76.
+    Ke2 Qe5 77. Bg4 Qe6 78. Kd3 Bc6 79. Nf2 Bd5 80. h6 Qf5+ 81. Bxf5 Bc6 82. Nh3 Nc4
+    83. Ra1 Kf6 84. Ng5 Kxf5 85. Kd4 Kf6 86. Nd2 Kxg5 87. Ra2 Kg6 88. f4 b1=Q 89.
+    Ne4 Qa1+ 90. Kd3 Qb1+ 91. Ke2 b2 92. Nd2 Qa1 93. Rxa1 Bd7 94. Rf1 b1=Q 95. Nf3
+    Nd6 96. Kd2 Bc8 97. Ke3 Qa1 98. Kd2 Bb7 99. Ke2 Qa2+ 100. Kd1 Qxa3 101. Nh2 Kf5
+    102. Ng4 Qb4 103. Nf2 Ne8 104. Ne4 Ke6 105. Nc3 a3 106. Nb5 Kd7 107. Nxa3 Qb3+
+    108. Kd2 Kd6 109. Ke2 Qb4 110. Re1 Bc8 111. Kd3 Be6 112. Re3 Qb3+ 113. Kd4 Bf5
+    114. Nc4+ Qxc4+ 115. Kxc4 Kc6 116. Kb4 Kd6 117. Re4 Kd5 118. Ka4 Kxe4 119. Ka5
+    Kd5 120. Kb6 Kd6 121. Ka7 Kd5 122. Kb6 Kd4 123. Ka5 Bg4 124. Ka6 Bh3 125. Kb7
+    Kc4 126. Ka6 Kc3 127. h7 Kc2 128. h8=Q Kb3 129. Ka7 Ka4 130. Qf6 Ka5 131. Qg6
+    Ka4 132. Qh7 Kb3 133. Qh8 Kb4 134. Qg7 Kb5 135. Qb2+ Kc6 136. Qa1 Kc5 137. f5
+    Kc6 138. Qh1+ Kc5 139. Qe4 Bg4 140. Qh1 Bf3 141. Qd1 Kc6 142. Qg1 Kc7 143. Qg8
+    Be4 144. Qh7+ Kc6 145. Qc7+ Kxc7 146. f6 Kc6 147. f7 Bd5 148. f8=B Be4 149. Ka8
+    Bd5 150. Bb4 Be4 151. Ka7 Bd5 152. Kb8 Be4 153. Ka7 Bd5 154. Ka8 Kc7+ 155. Ka7
+    Be4 156. Ba5+ Kc6 157. Kb8 Bf3 158. Bc3 Kd5 159. Kc8 Ke4 160. Bd2 Ke5 161. Kb8
+    Kd6 162. Bf4+ Ke7 163. Be5 Be4 164. Bc7 Bd5 165. Bd6+ Kxd6 166. Ka7 Bc6 167. Kb8
+    Kd7 168. Ka7 Kd6 169. Ka6 Ke7 170. Ka5 Ke6 171. Ka6 Bd7 172. Kb6 Ke5 173. Ka7
+    Ke4 174. Ka8 Ke5 175. Ka7 Ke4 176. Kb8 Ke3 177. Ka8 Ke4 178. Kb7 Ke3 179. Ka6
+    Ke4 180. Kb7 Ke3 181. Ka7 Be6 182. Ka8 Bd7 183. Kb7 Be6 184. Ka6 Kd4 185. Kb7
+    Kd3 186. Ka7 Kd4 187. Kb6 Ke5 188. Ka5 Kd6 189. Kb4 Kd5 190. Ka3 Kd4 191. Kb4
+    Kd5 192. Ka5 Kc6 193. Ka4 Kc5 194. Ka3 Kc4 195. Ka2 Bd7 196. Ka1 Kc3 197. Kb1
+    Be6 198. Kc1 Bd7 199. Kb1 Be6 200. Ka1 Bd5 201. Kb1 Be4+ 202. Ka1 Kc4 203. Kb2
+    Bd5 204. Kc2 Kc5 205. Kb1 Bc6 206. Kc1 Kc4 207. Kd2 Bb5 208. Kc1 Kc5 209. Kc2
+    Nf6 210. Kd1 Ng4 211. Kd2 Kc4 212. Ke1 Kd5 213. Kd2 Ke4 214. Kc2 Kd5 215. Kb1
+    Kc6 216. Kb2 Kb7 217. Kc3 Ne3 218. Kb4 Kb6 219. Kc3 Bc6 220. Kd3 Be8 221. Ke2
+    Kb5 222. Kxe3 1/2-1/2'

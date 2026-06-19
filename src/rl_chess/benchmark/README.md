@@ -22,12 +22,12 @@ The CLI is structured into **Global Options** (for the benchmark itself) and **A
 
 *Example: Run a deterministic benchmark, 50 games per opponent, with a 75% win rate required to keep testing against even stronger opponents:*
 ```bash
-uv run benchmark --games 50 --pass-threshold 0.75 --deterministic DQNAgent --model_path "path/to/weights.pt"
+uv run benchmark --games 50 --pass-threshold 0.75 --deterministic ResNetAgent --model_path "path/to/weights.pt"
 ```
 
 ### Agent Options
 The specific agent's `__init__` arguments can be passed after the agent's name, as the script dynamically inspects the `__init__` method of the target agent class. You can view the specific arguments for your agent by using the `-h` flag *after* the agent name.
 
 ```bash
-uv run benchmark DQNAgent -h
+uv run benchmark ResNetAgent -h
 ```
